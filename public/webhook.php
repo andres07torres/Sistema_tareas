@@ -21,6 +21,37 @@ $db = (new Database())->getConnection();
 
 $mensaje = "";
 
+// Función para formatear listas agrupadas por materia
+function formatearListaTareas($tareas, $titulo_seccion) {
+    if (count($tareas) == 0) return "";
+    
+    $mensaje = "{$titulo_seccion}\n\n";
+    $materiaActual = "";
+    
+    foreach ($tareas as $t) {
+        $materia = str_replace(['_', '*', '`'], ' ', $t['materia'] ?? 'General');
+        $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
+        $dias = $t['dias_restantes'] ?? null;
+        
+        // Si la materia cambia, ponemos un nuevo encabezado
+        if ($materia !== $materiaActual) {
+            $mensaje .= "\n📘 *{$materia}*\n";
+            $materiaActual = $materia;
+        }
+        
+        // Formatear el tiempo restante
+        $texto_vence = "";
+        if ($dias !== null) {
+            if ($dias < 0) $texto_vence = " (atrasada " . abs($dias) . "d)";
+            elseif ($dias == 0) $texto_vence = " (¡HOY!)";
+            else $texto_vence = " (vence en {$dias}d)";
+        }
+
+        $mensaje .= "📝 {$titulo}{$texto_vence}\n";
+    }
+    return $mensaje;
+}
+
 // Lógica de Comandos
 if ($text == "/start" || $text == "/ayuda") {
     $mensaje = "🤖 *Asistente de Tareas UNEMI* 📚\n\n";
@@ -31,75 +62,31 @@ if ($text == "/start" || $text == "/ayuda") {
     $mensaje .= "/ayuda - Guía de uso y comandos";
 } 
 elseif ($text == "/hoy") {
-    $query = "SELECT titulo, materia FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE";
+    $query = "SELECT titulo, materia FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    if (count($tareas) > 0) {
-        $mensaje = "📅 *Tareas para hoy:*\n\n";
-        foreach ($tareas as $t) {
-            $materia = str_replace(['_', '*', '`'], ' ', $t['materia'] ?? 'Tarea');
-            $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
-            $mensaje .= "📘 *{$materia}*\n📝 {$titulo}\n\n";
-        }
-    } else {
-        $mensaje = "☕ ¡Relax! No tienes tareas para hoy.";
-    }
+    $res = formatearListaTareas($tareas, "📅 *Tareas para hoy:*");
+    $mensaje = ($res !== "") ? $res : "☕ ¡Relax! No tienes tareas para hoy.";
 }
 elseif ($text == "/semana") {
     $query = "SELECT titulo, materia, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
-              FROM tareas 
-              WHERE estado = 'pendiente' 
-              AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 
-              ORDER BY fecha_entrega ASC";
+              FROM tareas WHERE estado = 'pendiente' AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 
+              ORDER BY materia ASC, fecha_entrega ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    if (count($tareas) > 0) {
-        $mensaje = "🗓 *Tareas de la semana:*\n\n";
-        foreach ($tareas as $t) {
-            $materia = str_replace(['_', '*', '`'], ' ', $t['materia'] ?? 'Tarea');
-            $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
-            $dias = $t['dias_restantes'];
-            $texto_vence = ($dias == 0) ? "¡VENCE HOY!" : "vence en $dias día(s)";
-            
-            $mensaje .= "📘 *{$materia}*\n📝 {$titulo}\n⏳ $texto_vence ({$t['fecha_entrega']})\n\n";
-        }
-    } else {
-        $mensaje = "✅ Todo al día para esta semana.";
-    }
+    $res = formatearListaTareas($tareas, "🗓 *Tareas de la semana:*");
+    $mensaje = ($res !== "") ? $res : "✅ Todo al día para esta semana.";
 }
 elseif ($text == "/tareas") {
     $query = "SELECT titulo, materia, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
-              FROM tareas 
-              WHERE estado = 'pendiente' 
-              ORDER BY fecha_entrega ASC";
+              FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC, fecha_entrega ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    if (count($tareas) > 0) {
-        $mensaje = "📋 *Todas tus tareas pendientes:*\n\n";
-        foreach ($tareas as $t) {
-            $materia = str_replace(['_', '*', '`'], ' ', $t['materia'] ?? 'Tarea');
-            $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
-            $dias = $t['dias_restantes'];
-            
-            if ($dias < 0) {
-                $texto_vence = "atrasada por " . abs($dias) . " día(s)";
-            } elseif ($dias == 0) {
-                $texto_vence = "¡VENCE HOY!";
-            } else {
-                $texto_vence = "vence en $dias día(s)";
-            }
-
-            $mensaje .= "📘 *{$materia}*\n📝 {$titulo}\n⏳ $texto_vence ({$t['fecha_entrega']})\n\n";
-        }
-    } else {
-        $mensaje = "🎉 ¡Felicidades! No tienes tareas pendientes.";
-    }
+    $res = formatearListaTareas($tareas, "📋 *Todas tus tareas pendientes:*");
+    $mensaje = ($res !== "") ? $res : "🎉 ¡Felicidades! No tienes tareas pendientes.";
 }
 
 // Enviar respuesta a Telegram
