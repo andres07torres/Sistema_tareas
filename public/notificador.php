@@ -37,8 +37,12 @@ if (count($tareas) > 0) {
     foreach ($tareas as $t) {
         $dias = $t['dias_restantes'];
         $texto_dias = ($dias == 0) ? "¡VENCE HOY!" : "Vence en $dias día(s)";
-        $materia = $t['materia'] ? "📘 *{$t['materia']}*" : "📚 Tarea";
-        $mensaje .= "{$materia}\n📝 {$t['titulo']}\n⏳ $texto_dias ({$t['fecha_entrega']})\n\n";
+        
+        // Limpiar caracteres especiales que rompen el Markdown de Telegram
+        $titulo_limpio = str_replace(['_', '*', '`'], [' ', ' ', ' '], $t['titulo']);
+        $materia_limpia = str_replace(['_', '*', '`'], [' ', ' ', ' '], $t['materia'] ?? 'Tarea');
+
+        $mensaje .= "📘 *{$materia_limpia}*\n📝 {$titulo_limpio}\n⏳ $texto_dias ({$t['fecha_entrega']})\n\n";
     }
 
     $url = "https://api.telegram.org/bot{$telegramToken}/sendMessage";
