@@ -1,22 +1,21 @@
 <?php
-// 1. Cargar configuración (Compatibilidad Local vs Render)
-$env_path = __DIR__ . '/../.env';
+// Forzar la lectura de variables de entorno en Render
+$telegramToken = $_ENV['TELEGRAM_TOKEN'] ?? getenv('TELEGRAM_TOKEN');
+$chatId = $_ENV['TELEGRAM_CHAT_ID'] ?? getenv('TELEGRAM_CHAT_ID');
+$token_seguridad = $_ENV['CRON_TOKEN'] ?? getenv('CRON_TOKEN');
 
-if (file_exists($env_path)) {
-    $env = parse_ini_file($env_path);
-    $token_seguridad = $env['CRON_TOKEN'] ?? null;
-    $telegramToken = $env['TELEGRAM_TOKEN'] ?? null;
-    $chatId = $env['TELEGRAM_CHAT_ID'] ?? null;
-} else {
-    // En Render, usamos $_ENV para asegurar que lea las variables del panel
-    $token_seguridad = $_ENV['CRON_TOKEN'] ?? getenv('CRON_TOKEN');
-    $telegramToken = $_ENV['TELEGRAM_TOKEN'] ?? getenv('TELEGRAM_TOKEN');
-    $chatId = $_ENV['TELEGRAM_CHAT_ID'] ?? getenv('TELEGRAM_CHAT_ID');
+// Si no hay variables de entorno, intenta cargar el .env local (solo para tu PC)
+if (!$telegramToken && file_exists(__DIR__ . '/../.env')) {
+    $env = parse_ini_file(__DIR__ . '/../.env');
+    $telegramToken = $env['TELEGRAM_TOKEN'];
+    $chatId = $env['TELEGRAM_CHAT_ID'];
+    $token_seguridad = $env['CRON_TOKEN'];
 }
 
 // Validación de seguridad
 if (!isset($_GET['token']) || $_GET['token'] !== $token_seguridad) {
-    die("Acceso denegado. Token inválido.");
+    header('HTTP/1.1 401 Unauthorized');
+    die("Token de seguridad inválido.");
 }
 
 require_once __DIR__ . '/../config/database.php';
