@@ -5,7 +5,8 @@ if (file_exists($env_path)) {
     $env = parse_ini_file($env_path);
     $token_seguridad = $env['CRON_TOKEN'];
 } else {
-    $token_seguridad = getenv('CRON_TOKEN');
+    // En Render, $_ENV es la forma más fiable de obtener las variables
+    $token_seguridad = $_ENV['CRON_TOKEN'] ?? getenv('CRON_TOKEN');
 }
 
 if (!isset($_GET['token']) || $_GET['token'] !== $token_seguridad) {
@@ -35,13 +36,15 @@ if (count($tareas) > 0) {
         $mensaje .= "📚 *{$t['titulo']}*\n⏳ $texto_dias ({$t['fecha_entrega']})\n\n";
     }
 
-    // Traer credenciales de Telegram (Local vs Nube)
-    if (isset($env)) {
+    // Traer credenciales de Telegram (Compatibilidad Local vs Render)
+    if (file_exists($env_path)) {
+        $env = parse_ini_file($env_path);
         $telegramToken = $env['TELEGRAM_TOKEN'];
         $chatId = $env['TELEGRAM_CHAT_ID'];
     } else {
-        $telegramToken = getenv('TELEGRAM_TOKEN');
-        $chatId = getenv('TELEGRAM_CHAT_ID');
+        // En Render, $_ENV es la forma más fiable de obtener las variables
+        $telegramToken = $_ENV['TELEGRAM_TOKEN'] ?? getenv('TELEGRAM_TOKEN');
+        $chatId = $_ENV['TELEGRAM_CHAT_ID'] ?? getenv('TELEGRAM_CHAT_ID');
     }
     $url = "https://api.telegram.org/bot{$telegramToken}/sendMessage";
     
