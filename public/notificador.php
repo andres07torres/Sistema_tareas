@@ -1,6 +1,6 @@
 <?php
 // 1. Lógica "inteligente" para cargar configuración y capa de seguridad
-$env_path = __DIR__ . '/../.env';
+$env_path = dirname(__DIR__) . '/.env';
 if (file_exists($env_path)) {
     $env = parse_ini_file($env_path);
     $token_seguridad = $env['CRON_TOKEN'];
@@ -15,7 +15,7 @@ if (!isset($_GET['token']) || $_GET['token'] !== $token_seguridad) {
 require_once '../config/database.php';
 $db = (new Database())->getConnection();
 
-// 2. Buscar tareas pendientes que venzan entre hoy y los próximos 2 días
+// 2. Buscar tareas pendientes que venzan entre hoy y los próximos 7 días
 $query = "SELECT titulo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
           FROM tareas 
           WHERE estado = 'pendiente' 
