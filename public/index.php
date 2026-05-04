@@ -1,4 +1,5 @@
 <?php
+// Proyecto dockerizado y configurado para Supabase
 require_once '../config/database.php';
 $mensaje = '';
 
