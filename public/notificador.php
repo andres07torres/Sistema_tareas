@@ -1,16 +1,8 @@
 <?php
-// Forzar la lectura de variables de entorno en Render
-$telegramToken = $_ENV['TELEGRAM_TOKEN'] ?? getenv('TELEGRAM_TOKEN');
-$chatId = $_ENV['TELEGRAM_CHAT_ID'] ?? getenv('TELEGRAM_CHAT_ID');
-$token_seguridad = $_ENV['CRON_TOKEN'] ?? getenv('CRON_TOKEN');
-
-// Si no hay variables de entorno, intenta cargar el .env local (solo para tu PC)
-if (!$telegramToken && file_exists(__DIR__ . '/../.env')) {
-    $env = parse_ini_file(__DIR__ . '/../.env');
-    $telegramToken = $env['TELEGRAM_TOKEN'];
-    $chatId = $env['TELEGRAM_CHAT_ID'];
-    $token_seguridad = $env['CRON_TOKEN'];
-}
+// Forzar valores directos para prueba de diagnóstico
+$telegramToken = "8718430332:AAF3Jk9vf5XoC7fjuDUhxJUBxB6UFxsX5UE";
+$chatId = "8380935990";
+$token_seguridad = "ClaveUnemi123";
 
 // Validación de seguridad
 if (!isset($_GET['token']) || $_GET['token'] !== $token_seguridad) {
