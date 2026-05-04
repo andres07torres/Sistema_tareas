@@ -45,7 +45,11 @@ elseif ($text == "/hoy") {
     }
 }
 elseif ($text == "/semana") {
-    $query = "SELECT titulo, materia, fecha_entrega FROM tareas WHERE estado = 'pendiente' AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 ORDER BY fecha_entrega ASC";
+    $query = "SELECT titulo, materia, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
+              FROM tareas 
+              WHERE estado = 'pendiente' 
+              AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 
+              ORDER BY fecha_entrega ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -55,14 +59,20 @@ elseif ($text == "/semana") {
         foreach ($tareas as $t) {
             $materia = str_replace(['_', '*', '`'], ' ', $t['materia'] ?? 'Tarea');
             $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
-            $mensaje .= "📘 *{$materia}*\n📝 {$titulo} ({$t['fecha_entrega']})\n\n";
+            $dias = $t['dias_restantes'];
+            $texto_vence = ($dias == 0) ? "¡VENCE HOY!" : "vence en $dias día(s)";
+            
+            $mensaje .= "📘 *{$materia}*\n📝 {$titulo}\n⏳ $texto_vence ({$t['fecha_entrega']})\n\n";
         }
     } else {
         $mensaje = "✅ Todo al día para esta semana.";
     }
 }
 elseif ($text == "/tareas") {
-    $query = "SELECT titulo, materia, fecha_entrega FROM tareas WHERE estado = 'pendiente' ORDER BY fecha_entrega ASC";
+    $query = "SELECT titulo, materia, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
+              FROM tareas 
+              WHERE estado = 'pendiente' 
+              ORDER BY fecha_entrega ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -72,7 +82,17 @@ elseif ($text == "/tareas") {
         foreach ($tareas as $t) {
             $materia = str_replace(['_', '*', '`'], ' ', $t['materia'] ?? 'Tarea');
             $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
-            $mensaje .= "📘 *{$materia}*\n📝 {$titulo} ({$t['fecha_entrega']})\n\n";
+            $dias = $t['dias_restantes'];
+            
+            if ($dias < 0) {
+                $texto_vence = "atrasada por " . abs($dias) . " día(s)";
+            } elseif ($dias == 0) {
+                $texto_vence = "¡VENCE HOY!";
+            } else {
+                $texto_vence = "vence en $dias día(s)";
+            }
+
+            $mensaje .= "📘 *{$materia}*\n📝 {$titulo}\n⏳ $texto_vence ({$t['fecha_entrega']})\n\n";
         }
     } else {
         $mensaje = "🎉 ¡Felicidades! No tienes tareas pendientes.";
