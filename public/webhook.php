@@ -13,6 +13,9 @@ if (!$update || !isset($update["message"])) {
 $chatId = $update["message"]["chat"]["id"];
 $text = trim($update["message"]["text"]);
 
+// Soporte para grupos: Quitar el nombre del bot si viene en el comando (ej: /hoy@TareasUNEMI_bot -> /hoy)
+$text = explode('@', $text)[0];
+
 require_once __DIR__ . '/../config/database.php';
 $db = (new Database())->getConnection();
 
