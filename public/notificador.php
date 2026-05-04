@@ -1,6 +1,7 @@
 <?php
+// Prueba de conexión directa con credenciales fijas
 // Forzar valores directos para prueba de diagnóstico
-$telegramToken = "8718430332:AAF3Jk9vf5XoC7fjuDUhxJUBxB6UFxsX5UE";
+$telegramToken = "8718430332:AAFMal45Sqx5tjtwSPrI5MHYJWiwUiR6pZg";
 $chatId = "8380935990";
 $token_seguridad = "ClaveUnemi123";
 
