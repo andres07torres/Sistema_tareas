@@ -6,15 +6,16 @@ $mensaje = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $db = (new Database())->getConnection();
     
-    // Consulta preparada para evitar inyecciones SQL
-    $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega) VALUES (:titulo, :descripcion, :fecha_entrega)";
+    // Consulta preparada para incluir la materia
+    $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, materia) VALUES (:titulo, :descripcion, :fecha_entrega, :materia)";
     $stmt = $db->prepare($query);
     
     try {
         $stmt->execute([
             ':titulo' => trim($_POST['titulo']),
             ':descripcion' => trim($_POST['descripcion']),
-            ':fecha_entrega' => trim($_POST['fecha_entrega'])
+            ':fecha_entrega' => trim($_POST['fecha_entrega']),
+            ':materia' => trim($_POST['materia'])
         ]);
         $mensaje = "<div style='color: #155724; background: #d4edda; padding: 10px; border-radius: 4px; margin-bottom: 15px;'>¡Tarea registrada con éxito!</div>";
     } catch (Exception $e) {
@@ -43,6 +44,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php echo $mensaje; ?>
         
         <form method="POST">
+            <label>Materia:</label>
+            <input type="text" name="materia" placeholder="Ej: Programación Avanzada, Cálculo..." required>
+
             <label>Título de la tarea:</label>
             <input type="text" name="titulo" placeholder="Ej: Proyecto en QGIS" required>
             

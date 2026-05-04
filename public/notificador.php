@@ -22,7 +22,7 @@ require_once __DIR__ . '/../config/database.php';
 $db = (new Database())->getConnection();
 
 // 2. Buscar tareas (Rango de 7 días para pruebas)
-$query = "SELECT titulo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
+$query = "SELECT titulo, materia, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
           FROM tareas 
           WHERE estado = 'pendiente' 
           AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7";
@@ -37,7 +37,8 @@ if (count($tareas) > 0) {
     foreach ($tareas as $t) {
         $dias = $t['dias_restantes'];
         $texto_dias = ($dias == 0) ? "¡VENCE HOY!" : "Vence en $dias día(s)";
-        $mensaje .= "📚 *{$t['titulo']}*\n⏳ $texto_dias ({$t['fecha_entrega']})\n\n";
+        $materia = $t['materia'] ? "📘 *{$t['materia']}*" : "📚 Tarea";
+        $mensaje .= "{$materia}\n📝 {$t['titulo']}\n⏳ $texto_dias ({$t['fecha_entrega']})\n\n";
     }
 
     $url = "https://api.telegram.org/bot{$telegramToken}/sendMessage";
