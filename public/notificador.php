@@ -19,7 +19,7 @@ $db = (new Database())->getConnection();
 $query = "SELECT titulo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
           FROM tareas 
           WHERE estado = 'pendiente' 
-          AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 2";
+          AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7";
 
 $stmt = $db->prepare($query);
 $stmt->execute();
