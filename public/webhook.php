@@ -17,7 +17,6 @@ if (file_exists($envPath)) {
 }
 
 $telegramToken = $_ENV['TELEGRAM_TOKEN'] ?? getenv('TELEGRAM_TOKEN');
-$geminiKey = $_ENV['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY');
 
 // 2. RECIBIR DATOS
 $content = file_get_contents("php://input");
@@ -99,8 +98,7 @@ function formatearReporte($tareas, $titulo) {
         
         $keyboard = [
             'inline_keyboard' => [[
-                ['text' => "✅ Completar", 'callback_data' => "completar_{$id}"],
-                ['text' => "💡 Tip IA", 'callback_data' => "tip_{$id}"]
+                ['text' => "✅ Completar", 'callback_data' => "completar_{$id}"]
             ]]
         ];
         
@@ -128,30 +126,6 @@ if (isset($update["callback_query"])) {
         $stmt = $db->prepare("UPDATE tareas SET estado = 'completada' WHERE id = :id");
         $stmt->execute([':id' => $id]);
         editarMensaje($chatId, $messageId, $telegramToken, "✅ ¡Tarea marcada como completada!");
-    }
-    elseif (strpos($data, "tip_") === 0) {
-        $id = str_replace("tip_", "", $data);
-        $stmt = $db->prepare("SELECT titulo, materia FROM tareas WHERE id = :id");
-        $stmt->execute([':id' => $id]);
-        $t = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        $tip = "Mantén la calma y organiza tus tiempos. ¡Tú puedes!";
-        if ($geminiKey) {
-            // Lógica simple de Gemini si existe la clave
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $geminiKey;
-            $prompt = "Dame un consejo corto para estudiar '{$t['titulo']}' de '{$t['materia']}'. Máximo 2 frases.";
-            $payload = json_encode(["contents" => [["parts" => [["text" => $prompt]]]]]);
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            $res = json_decode(curl_exec($ch), true);
-            curl_close($ch);
-            $tip = $res['candidates'][0]['content']['parts'][0]['text'] ?? $tip;
-        }
-        enviarMensaje($chatId, $telegramToken, "💡 *Consejo:* \n\n" . $tip);
     }
     exit;
 }
