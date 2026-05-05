@@ -6,8 +6,9 @@ $mensaje = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $db = (new Database())->getConnection();
     
-    // Consulta preparada para incluir la materia y el tipo
-    $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, materia, tipo) VALUES (:titulo, :descripcion, :fecha_entrega, :materia, :tipo)";
+    // Consulta preparada para incluir todos los campos
+    $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, fecha_apertura, materia, tipo) 
+              VALUES (:titulo, :descripcion, :fecha_entrega, :fecha_apertura, :materia, :tipo)";
     $stmt = $db->prepare($query);
     
     try {
@@ -15,6 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ':titulo' => trim($_POST['titulo']),
             ':descripcion' => trim($_POST['descripcion']),
             ':fecha_entrega' => trim($_POST['fecha_entrega']),
+            ':fecha_apertura' => trim($_POST['fecha_apertura']),
             ':materia' => trim($_POST['materia']),
             ':tipo' => trim($_POST['tipo'])
         ]);
@@ -68,6 +70,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <label>Descripción o anotaciones:</label>
             <textarea name="descripcion" rows="3" placeholder="Detalles de la entrega..."></textarea>
             
+            <label>Fecha de apertura:</label>
+            <input type="date" name="fecha_apertura" value="<?php echo date('Y-m-d'); ?>" required>
+
             <label>Fecha máxima de entrega:</label>
             <input type="date" name="fecha_entrega" required>
             

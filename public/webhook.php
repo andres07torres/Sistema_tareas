@@ -37,6 +37,8 @@ function formatearListaTareas($tareas, $titulo_seccion) {
         $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
         $dias = $t['dias_restantes'] ?? null;
         $tipo = $t['tipo'] ?? 'tarea';
+        $f_apertura = $t['fecha_apertura'] ?? 'N/A';
+        $f_entrega = $t['fecha_entrega'] ?? 'N/A';
         
         // Icono según el tipo
         $icono = ($tipo == 'test') ? "🎓" : "📝";
@@ -55,11 +57,13 @@ function formatearListaTareas($tareas, $titulo_seccion) {
             else $texto_vence = " (vence en {$dias}d)";
         }
 
-        $mensaje .= "{$icono} {$titulo}{$texto_vence}\n";
+        $mensaje .= "{$icono} {$titulo}\n";
+        $mensaje .= "📅 *Apertura:* {$f_apertura}\n";
+        $mensaje .= "⌛ *Cierre:* {$f_entrega} {$texto_vence}\n";
+        $mensaje .= "───────────────\n";
     }
 
     // CIERRE DEL REPORTE
-    $mensaje .= "\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n";
     $mensaje .= "📌 _Mantente al día con UNEMI_";
     
     return $mensaje;
@@ -75,7 +79,7 @@ if ($text == "/start" || $text == "/ayuda") {
     $mensaje .= "/ayuda - Guía de uso y comandos";
 } 
 elseif ($text == "/hoy") {
-    $query = "SELECT titulo, materia, tipo FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC";
+    $query = "SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -83,7 +87,7 @@ elseif ($text == "/hoy") {
     $mensaje = ($res !== "") ? $res : "☕ ¡Relax! No tienes tareas para hoy.";
 }
 elseif ($text == "/semana") {
-    $query = "SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
+    $query = "SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
               FROM tareas WHERE estado = 'pendiente' AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 
               ORDER BY materia ASC, fecha_entrega ASC";
     $stmt = $db->prepare($query);
@@ -93,7 +97,7 @@ elseif ($text == "/semana") {
     $mensaje = ($res !== "") ? $res : "✅ Todo al día para esta semana.";
 }
 elseif ($text == "/tareas") {
-    $query = "SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
+    $query = "SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
               FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC, fecha_entrega ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
