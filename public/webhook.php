@@ -146,7 +146,7 @@ if (isset($update["message"])) {
         $db = (new Database())->getConnection();
 
         if ($text == "/start" || $text == "/ayuda") {
-            enviarMensaje($chatId, $telegramToken, "🤖 *Asistente UNEMI Activo*\n(VERSIÓN: RAMA PRUEBAS)\n\nUsa /tareas para ver tus pendientes.");
+            enviarMensaje($chatId, $telegramToken, "🤖 *Asistente UNEMI Activo*\nUsa /tareas para ver tus pendientes.");
         }
         elseif ($text == "/hoy") {
             $stmt = $db->prepare("SELECT id, titulo, materia, tipo, fecha_entrega FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC");
