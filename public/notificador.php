@@ -35,9 +35,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // 3. Evaluar y enviar el mensaje agrupado
 if (count($tareas) > 0) {
     // APERTURA
-    $mensaje = "▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n";
-    $mensaje .= "🔔 *RECORDATORIO DIARIO* 🔔\n";
-    $mensaje .= "▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n\n";
+    $mensaje = "🔔 *RECORDATORIO DIARIO* 🔔\n\n";
     
     $materiaActual = "";
 
@@ -62,11 +60,10 @@ if (count($tareas) > 0) {
         $mensaje .= "{$icono} {$titulo}\n";
         $mensaje .= "📅 *Apertura:* {$f_apertura}\n";
         $mensaje .= "⌛ *Cierre:* {$f_entrega} ({$texto_dias})\n";
-        $mensaje .= "───────────────\n";
     }
 
     // CIERRE
-    $mensaje .= "🚀 _¡A estudiar se ha dicho!_";
+    $mensaje .= "\n🚀 _¡A estudiar se ha dicho!_";
 
     $url = "https://api.telegram.org/bot{$telegramToken}/sendMessage";
     $data = [

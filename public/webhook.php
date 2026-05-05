@@ -26,9 +26,7 @@ function formatearListaTareas($tareas, $titulo_seccion) {
     if (count($tareas) == 0) return "";
     
     // APERTURA DEL REPORTE
-    $mensaje = "▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n";
-    $mensaje .= "  {$titulo_seccion}\n";
-    $mensaje .= "▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n";
+    $mensaje = "{$titulo_seccion}\n";
     
     $materiaActual = "";
     
@@ -60,11 +58,10 @@ function formatearListaTareas($tareas, $titulo_seccion) {
         $mensaje .= "{$icono} {$titulo}\n";
         $mensaje .= "📅 *Apertura:* {$f_apertura}\n";
         $mensaje .= "⌛ *Cierre:* {$f_entrega} {$texto_vence}\n";
-        $mensaje .= "───────────────\n";
     }
 
     // CIERRE DEL REPORTE
-    $mensaje .= "📌 _Mantente al día con UNEMI_";
+    $mensaje .= "\n📌 _Mantente al día con UNEMI_";
     
     return $mensaje;
 }
