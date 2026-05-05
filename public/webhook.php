@@ -25,13 +25,21 @@ $mensaje = "";
 function formatearListaTareas($tareas, $titulo_seccion) {
     if (count($tareas) == 0) return "";
     
-    $mensaje = "{$titulo_seccion}\n\n";
+    // APERTURA DEL REPORTE
+    $mensaje = "▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n";
+    $mensaje .= "  {$titulo_seccion}\n";
+    $mensaje .= "▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n";
+    
     $materiaActual = "";
     
     foreach ($tareas as $t) {
         $materia = str_replace(['_', '*', '`'], ' ', $t['materia'] ?? 'General');
         $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
         $dias = $t['dias_restantes'] ?? null;
+        $tipo = $t['tipo'] ?? 'tarea';
+        
+        // Icono según el tipo
+        $icono = ($tipo == 'test') ? "🎓" : "📝";
         
         // Si la materia cambia, ponemos un nuevo encabezado
         if ($materia !== $materiaActual) {
@@ -47,8 +55,13 @@ function formatearListaTareas($tareas, $titulo_seccion) {
             else $texto_vence = " (vence en {$dias}d)";
         }
 
-        $mensaje .= "📝 {$titulo}{$texto_vence}\n";
+        $mensaje .= "{$icono} {$titulo}{$texto_vence}\n";
     }
+
+    // CIERRE DEL REPORTE
+    $mensaje .= "\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n";
+    $mensaje .= "📌 _Mantente al día con UNEMI_";
+    
     return $mensaje;
 }
 
@@ -62,30 +75,30 @@ if ($text == "/start" || $text == "/ayuda") {
     $mensaje .= "/ayuda - Guía de uso y comandos";
 } 
 elseif ($text == "/hoy") {
-    $query = "SELECT titulo, materia FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC";
+    $query = "SELECT titulo, materia, tipo FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $res = formatearListaTareas($tareas, "📅 *Tareas para hoy:*");
+    $res = formatearListaTareas($tareas, "📅 TAREAS PARA HOY");
     $mensaje = ($res !== "") ? $res : "☕ ¡Relax! No tienes tareas para hoy.";
 }
 elseif ($text == "/semana") {
-    $query = "SELECT titulo, materia, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
+    $query = "SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
               FROM tareas WHERE estado = 'pendiente' AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 
               ORDER BY materia ASC, fecha_entrega ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $res = formatearListaTareas($tareas, "🗓 *Tareas de la semana:*");
+    $res = formatearListaTareas($tareas, "🗓 REPORTE DE LA SEMANA");
     $mensaje = ($res !== "") ? $res : "✅ Todo al día para esta semana.";
 }
 elseif ($text == "/tareas") {
-    $query = "SELECT titulo, materia, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
+    $query = "SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
               FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC, fecha_entrega ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $res = formatearListaTareas($tareas, "📋 *Todas tus tareas pendientes:*");
+    $res = formatearListaTareas($tareas, "📋 TODOS LOS PENDIENTES");
     $mensaje = ($res !== "") ? $res : "🎉 ¡Felicidades! No tienes tareas pendientes.";
 }
 

@@ -6,8 +6,8 @@ $mensaje = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $db = (new Database())->getConnection();
     
-    // Consulta preparada para incluir la materia
-    $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, materia) VALUES (:titulo, :descripcion, :fecha_entrega, :materia)";
+    // Consulta preparada para incluir la materia y el tipo
+    $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, materia, tipo) VALUES (:titulo, :descripcion, :fecha_entrega, :materia, :tipo)";
     $stmt = $db->prepare($query);
     
     try {
@@ -15,7 +15,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ':titulo' => trim($_POST['titulo']),
             ':descripcion' => trim($_POST['descripcion']),
             ':fecha_entrega' => trim($_POST['fecha_entrega']),
-            ':materia' => trim($_POST['materia'])
+            ':materia' => trim($_POST['materia']),
+            ':tipo' => trim($_POST['tipo'])
         ]);
         $mensaje = "<div style='color: #155724; background: #d4edda; padding: 10px; border-radius: 4px; margin-bottom: 15px;'>¡Tarea registrada con éxito!</div>";
     } catch (Exception $e) {
@@ -46,6 +47,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <form method="POST">
             <label>Materia:</label>
             <input type="text" name="materia" placeholder="Ej: Programación Avanzada, Cálculo..." required>
+
+            <label>Tipo de Actividad:</label>
+            <select name="tipo" style="width: 100%; margin-bottom: 1.5rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                <option value="tarea">📝 Tarea (Entregable)</option>
+                <option value="test">🎓 Test / Lección</option>
+            </select>
 
             <label>Título de la tarea:</label>
             <input type="text" name="titulo" placeholder="Ej: Proyecto en QGIS" required>

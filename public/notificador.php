@@ -22,7 +22,7 @@ require_once __DIR__ . '/../config/database.php';
 $db = (new Database())->getConnection();
 
 // 2. Buscar tareas (Ordenadas por materia para agrupar)
-$query = "SELECT titulo, materia, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
+$query = "SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
           FROM tareas 
           WHERE estado = 'pendiente' 
           AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7
@@ -34,13 +34,21 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 3. Evaluar y enviar el mensaje agrupado
 if (count($tareas) > 0) {
-    $mensaje = "🔔 *Recordatorio de Entregas Universitarias* 🔔\n\n";
+    // APERTURA
+    $mensaje = "▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n";
+    $mensaje .= "🔔 *RECORDATORIO DIARIO* 🔔\n";
+    $mensaje .= "▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n\n";
+    
     $materiaActual = "";
 
     foreach ($tareas as $t) {
         $materia = str_replace(['_', '*', '`'], ' ', $t['materia'] ?? 'General');
         $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
         $dias = $t['dias_restantes'];
+        $tipo = $t['tipo'] ?? 'tarea';
+        
+        // Icono según el tipo
+        $icono = ($tipo == 'test') ? "🎓" : "📝";
         
         // Encabezado de materia si cambia
         if ($materia !== $materiaActual) {
@@ -49,8 +57,12 @@ if (count($tareas) > 0) {
         }
 
         $texto_dias = ($dias == 0) ? "¡VENCE HOY!" : "vence en $dias día(s)";
-        $mensaje .= "📝 {$titulo} - {$texto_dias} ({$t['fecha_entrega']})\n";
+        $mensaje .= "{$icono} {$titulo} - {$texto_dias} ({$t['fecha_entrega']})\n";
     }
+
+    // CIERRE
+    $mensaje .= "\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n";
+    $mensaje .= "🚀 _¡A estudiar se ha dicho!_";
 
     $url = "https://api.telegram.org/bot{$telegramToken}/sendMessage";
     $data = [
