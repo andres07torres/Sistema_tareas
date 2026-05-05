@@ -1,122 +1,119 @@
 <?php
-// Forzar la lectura de variables de entorno
+// 1. CARGAR CONFIGURACIÓN
+$envPath = __DIR__ . '/../.env';
+if (file_exists($envPath)) {
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (empty($line) || strpos($line, '#') === 0) continue;
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            $name = trim($name);
+            $value = trim($value);
+            putenv("{$name}={$value}");
+            $_ENV[$name] = $value;
+        }
+    }
+}
+
 $telegramToken = $_ENV['TELEGRAM_TOKEN'] ?? getenv('TELEGRAM_TOKEN');
 
-// Leer el JSON que envía Telegram
+// 2. RECIBIR DATOS
 $content = file_get_contents("php://input");
 $update = json_decode($content, true);
 
 if (!$update || !isset($update["message"])) {
-    die("No hay datos de Telegram.");
+    die("No hay mensaje directo.");
 }
 
 $chatId = $update["message"]["chat"]["id"];
-$text = trim($update["message"]["text"]);
+$text = trim($update["message"]["text"] ?? "");
 
-// Soporte para grupos: Quitar el nombre del bot si viene en el comando (ej: /hoy@TareasUNEMI_bot -> /hoy)
-$text = explode('@', $text)[0];
-
-require_once __DIR__ . '/../config/database.php';
-$db = (new Database())->getConnection();
-
-$mensaje = "";
-
-// Función para formatear listas agrupadas por materia
-function formatearListaTareas($tareas, $titulo_seccion) {
-    if (count($tareas) == 0) return "";
-    
-    // APERTURA DEL REPORTE
-    $mensaje = "{$titulo_seccion}\n";
-    
-    $materiaActual = "";
-    
-    foreach ($tareas as $t) {
-        $materia = str_replace(['_', '*', '`'], ' ', $t['materia'] ?? 'General');
-        $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
-        $dias = $t['dias_restantes'] ?? null;
-        $tipo = $t['tipo'] ?? 'tarea';
-        $f_apertura = $t['fecha_apertura'] ?? 'N/A';
-        $f_entrega = $t['fecha_entrega'] ?? 'N/A';
-        
-        // Icono según el tipo
-        $icono = ($tipo == 'test') ? "🎓" : "📝";
-        
-        // Si la materia cambia, ponemos un nuevo encabezado
-        if ($materia !== $materiaActual) {
-            $mensaje .= "\n📘 *{$materia}*\n";
-            $materiaActual = $materia;
-        }
-        
-        // Formatear el tiempo restante
-        $texto_vence = "";
-        if ($dias !== null) {
-            if ($dias < 0) $texto_vence = " (atrasada " . abs($dias) . "d)";
-            elseif ($dias == 0) $texto_vence = " (¡HOY!)";
-            else $texto_vence = " (vence en {$dias}d)";
-        }
-
-        $mensaje .= "{$icono} {$titulo}\n";
-        $mensaje .= "📅 *Apertura:* {$f_apertura}\n";
-        $mensaje .= "⌛ *Cierre:* {$f_entrega} {$texto_vence}\n";
-    }
-
-    // CIERRE DEL REPORTE
-    $mensaje .= "\n📌 _Mantente al día con UNEMI_";
-    
-    return $mensaje;
+// Limpieza para grupos (ej: /hoy@bot -> /hoy)
+if (strpos($text, '/') === 0) {
+    $parts = explode(' ', $text);
+    $cmd = explode('@', $parts[0])[0];
+    $text = $cmd . (isset($parts[1]) ? ' ' . implode(' ', array_slice($parts, 1)) : '');
 }
 
-// Lógica de Comandos
-if ($text == "/start" || $text == "/ayuda") {
-    $mensaje = "🤖 *Asistente de Tareas UNEMI* 📚\n\n";
-    $mensaje .= "Aquí tienes los comandos disponibles:\n";
-    $mensaje .= "/hoy - Tareas que vencen hoy\n";
-    $mensaje .= "/semana - Resumen de los próximos 7 días\n";
-    $mensaje .= "/tareas - Ver todos los pendientes\n";
-    $mensaje .= "/ayuda - Guía de uso y comandos";
-} 
-elseif ($text == "/hoy") {
-    $query = "SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $res = formatearListaTareas($tareas, "📅 TAREAS PARA HOY");
-    $mensaje = ($res !== "") ? $res : "☕ ¡Relax! No tienes tareas para hoy.";
-}
-elseif ($text == "/semana") {
-    $query = "SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
-              FROM tareas WHERE estado = 'pendiente' AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 
-              ORDER BY materia ASC, fecha_entrega ASC";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $res = formatearListaTareas($tareas, "🗓 REPORTE DE LA SEMANA");
-    $mensaje = ($res !== "") ? $res : "✅ Todo al día para esta semana.";
-}
-elseif ($text == "/tareas") {
-    $query = "SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
-              FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC, fecha_entrega ASC";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $res = formatearListaTareas($tareas, "📋 TODOS LOS PENDIENTES");
-    $mensaje = ($res !== "") ? $res : "🎉 ¡Felicidades! No tienes tareas pendientes.";
-}
+// --- FUNCIONES ---
 
-// Enviar respuesta a Telegram
-if ($mensaje !== "") {
-    $url = "https://api.telegram.org/bot{$telegramToken}/sendMessage";
+function enviarRespuesta($chatId, $token, $mensaje) {
+    $url = "https://api.telegram.org/bot{$token}/sendMessage";
     $data = [
         'chat_id' => $chatId,
         'text' => $mensaje,
-        'parse_mode' => 'Markdown'
+        'parse_mode' => 'Markdown',
+        'disable_web_page_preview' => true
     ];
-
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
+    $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_exec($ch);
     curl_close($ch);
+}
+
+function formatearTexto($tareas, $titulo_seccion) {
+    if (count($tareas) == 0) return "☕ No hay tareas pendientes.";
+    
+    $res = "{$titulo_seccion}\n";
+    $materiaActual = "";
+    
+    foreach ($tareas as $t) {
+        $materia = $t['materia'] ?? 'General';
+        $titulo = $t['titulo'];
+        $url_tarea = $t['url'] ?? '';
+        $f_entrega = $t['fecha_entrega'] ?? 'N/A';
+        $dias = $t['dias_restantes'] ?? null;
+        $tipo = $t['tipo'] ?? 'tarea';
+        
+        if ($materia !== $materiaActual) {
+            $res .= "\n📘 *{$materia}*\n";
+            $materiaActual = $materia;
+        }
+        
+        $icono = ($tipo == 'test') ? "🎓" : "📝";
+        $vence = "";
+        if ($dias !== null) {
+            if ($dias < 0) $vence = " (atrasada " . abs($dias) . "d)";
+            elseif ($dias == 0) $vence = " (¡HOY!)";
+            else $vence = " (vence en {$dias}d)";
+        }
+
+        // Título con enlace si existe URL
+        $titulo_formateado = ($url_tarea != '') ? "[{$titulo}]({$url_tarea})" : "*{$titulo}*";
+        
+        $res .= "{$icono} {$titulo_formateado}\n⌛ *Cierre:* {$f_entrega}{$vence}\n";
+    }
+    return $res;
+}
+
+// 3. EJECUCIÓN
+try {
+    require_once __DIR__ . '/../config/database.php';
+    $db = (new Database())->getConnection();
+
+    if ($text == "/start" || $text == "/ayuda") {
+        enviarRespuesta($chatId, $telegramToken, "🤖 *Asistente UNEMI (Pruebas)*\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes");
+    }
+    elseif ($text == "/hoy") {
+        $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, url FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC");
+        $stmt->execute();
+        enviarRespuesta($chatId, $telegramToken, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "📅 TAREAS PARA HOY"));
+    }
+    elseif ($text == "/semana") {
+        $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, url, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 ORDER BY materia ASC, fecha_entrega ASC");
+        $stmt->execute();
+        enviarRespuesta($chatId, $telegramToken, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "🗓 REPORTE DE LA SEMANA"));
+    }
+    elseif ($text == "/tareas") {
+        $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, url, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC, fecha_entrega ASC");
+        $stmt->execute();
+        enviarRespuesta($chatId, $telegramToken, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "📋 TODOS LOS PENDIENTES"));
+    }
+
+} catch (Exception $e) {
+    enviarRespuesta($chatId, $telegramToken, "⚠️ Error: " . $e->getMessage());
 }
