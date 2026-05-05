@@ -45,6 +45,25 @@ function enviarRespuesta($chatId, $token, $mensaje) {
     curl_close($ch);
 }
 
+/**
+ * Registra o actualiza un suscriptor en la base de datos
+ */
+function registrarSuscriptor($chatId, $update, $db) {
+    $nombre = "Desconocido";
+    $tipo = $update["message"]["chat"]["type"] ?? "private";
+
+    if ($tipo == "private") {
+        $nombre = $update["message"]["from"]["first_name"] ?? "Usuario";
+    } else {
+        $nombre = $update["message"]["chat"]["title"] ?? "Grupo";
+    }
+
+    $stmt = $db->prepare("INSERT INTO suscriptores (chat_id, nombre, tipo_chat) 
+                          VALUES (:id, :nom, :tipo) 
+                          ON CONFLICT (chat_id) DO UPDATE SET nombre = EXCLUDED.nombre");
+    $stmt->execute([':id' => $chatId, ':nom' => $nombre, ':tipo' => $tipo]);
+}
+
 function formatearTexto($tareas, $titulo_seccion) {
     if (count($tareas) == 0) return "☕ No hay tareas pendientes.";
     
@@ -90,6 +109,9 @@ if (strpos($text, '/') === 0) {
 try {
     require_once __DIR__ . '/../config/database.php';
     $db = (new Database())->getConnection();
+
+    // REGISTRO AUTOMÁTICO DE SUSCRIPTOR
+    registrarSuscriptor($chatId, $update, $db);
 
     if ($text == "/start" || $text == "/ayuda") {
         enviarRespuesta($chatId, $telegramToken, "🤖 *Asistente UNEMI Activo*\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes");
