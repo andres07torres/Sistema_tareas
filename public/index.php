@@ -71,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <textarea name="descripcion" rows="3" placeholder="Detalles de la entrega..."></textarea>
             
             <label>Fecha de apertura:</label>
-            <input type="date" name="fecha_apertura" value="<?php echo date('Y-m-d'); ?>" required>
+            <input type="date" name="fecha_apertura" required>
 
             <label>Fecha máxima de entrega:</label>
             <input type="date" name="fecha_entrega" required>
