@@ -46,7 +46,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         <form method="POST">
             <label>Materia:</label>
-            <input type="text" name="materia" placeholder="Ej: Programación Avanzada, Cálculo..." required>
+            <select name="materia" style="width: 100%; margin-bottom: 1.5rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; background: white;" required>
+                <option value="" disabled selected>Selecciona una materia...</option>
+                <option value="SISTEMAS DISTRIBUIDOS">SISTEMAS DISTRIBUIDOS</option>
+                <option value="SISTEMA DE GESTIÓN DE LA SEGURIDAD DE LA INFORMACIÓN">SISTEMA DE GESTIÓN DE LA SEGURIDAD DE LA INFORMACIÓN</option>
+                <option value="PRÁCTICAS LABORALES II">PRÁCTICAS LABORALES II</option>
+                <option value="GESTIÓN DE SISTEMAS DE CALIDAD">GESTIÓN DE SISTEMAS DE CALIDAD</option>
+                <option value="FORMULACIÓN Y EVALUACIÓN DEL TRABAJO DE TITULACIÓN">FORMULACIÓN Y EVALUACIÓN DEL TRABAJO DE TITULACIÓN</option>
+                <option value="COMPUTACIÓN MÓVIL">COMPUTACIÓN MÓVIL</option>
+            </select>
 
             <label>Tipo de Actividad:</label>
             <select name="tipo" style="width: 100%; margin-bottom: 1.5rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; background: white;">
