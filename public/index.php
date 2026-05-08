@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Asignaciones</title>
     <style>
-        body { font-family: system-ui, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 2rem; }
+        body { font-family: system-ui, sans-serif; background: #f0f2f5; padding: 0; margin: 0; }
         .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
         label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #333; }
         input, textarea, button { width: 100%; margin-bottom: 1.5rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
@@ -42,7 +42,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </style>
 </head>
 <body>
-    <div class="card">
+    <div style="width: 100%; padding-bottom: 2rem;">
+        <?php include 'navbar.php'; ?>
+        <div class="card" style="margin: 0 auto;">
         <h2 style="margin-top: 0; color: #1a1a1a;">Añadir Tarea</h2>
         <?php echo $mensaje; ?>
         

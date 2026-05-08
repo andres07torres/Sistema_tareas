@@ -33,25 +33,18 @@ if (count($tareas) === 0) {
     die("No hay tareas urgentes hoy.");
 }
 
-// 3. CONSTRUIR EL MENSAJE
-$mensaje = "🔔 *RECORDATORIO DIARIO* 🔔\n\n";
-$materiaActual = "";
-
-foreach ($tareas as $t) {
-    $materia = str_replace(['_', '*', '`'], ' ', $t['materia'] ?? 'General');
-    $titulo = str_replace(['_', '*', '`'], ' ', $t['titulo']);
-    $dias = $t['dias_restantes'];
-    
-    if ($materia !== $materiaActual) {
-        $mensaje .= "\n📘 *{$materia}*\n";
-        $materiaActual = $materia;
-    }
-
-    $icono = ($t['tipo'] == 'test') ? "🎓" : "📝";
-    $texto_dias = ($dias == 0) ? "¡VENCE HOY!" : "vence en $dias día(s)";
-    $mensaje .= "{$icono} {$titulo}\n⌛ *Cierre:* {$t['fecha_entrega']} ({$texto_dias})\n";
+// 3. CONSTRUIR EL MENSAJE (Versión ultraligera para evitar errores de tamaño)
+$totalTareas = count($tareas);
+$appUrl = $_ENV['APP_URL'] ?? getenv('APP_URL');
+if (!$appUrl && file_exists(__DIR__ . '/../.env')) {
+    $env = parse_ini_file(__DIR__ . '/../.env');
+    $appUrl = $env['APP_URL'] ?? '';
 }
-$mensaje .= "\n🚀 _¡A estudiar se ha dicho!_";
+
+$mensaje = "🔔 *REPORTE DE TAREAS* 🔔\n\n";
+$mensaje .= "Tienes *{$totalTareas}* actividades pendientes para los próximos 7 días.\n\n";
+$mensaje .= "🔗 *Ver detalles en el Panel:* \n[Abrir Panel de Control]($appUrl/vencimientos.php)";
+$mensaje .= "\n\n🚀 _¡A estudiar se ha dicho!_";
 
 // 4. ENVIAR A TODOS LOS SUSCRIPTORES
 $stmtSubs = $db->prepare("SELECT chat_id, nombre FROM suscriptores");
@@ -75,7 +68,7 @@ foreach ($suscriptores as $sub) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    
+
     $res = json_decode(curl_exec($ch), true);
     curl_close($ch);
 
@@ -87,4 +80,4 @@ foreach ($suscriptores as $sub) {
 }
 
 echo "Proceso completado.\n✅ Enviados: $enviados\n❌ Errores: $errores";
-?>
+?>
