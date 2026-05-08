@@ -28,9 +28,6 @@ foreach ($tareas as $t) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vencimientos Próximos | Asistente UNEMI</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
@@ -51,13 +48,15 @@ foreach ($tareas as $t) {
             background-color: var(--bg-color);
             color: var(--text-primary);
             min-height: 100vh;
-            padding: 2rem 1rem;
+            padding: 0;
+            margin: 0;
             line-height: 1.5;
         }
 
         .container {
             max-width: 600px;
             margin: 0 auto;
+            padding: 2rem 1rem;
         }
 
         header {

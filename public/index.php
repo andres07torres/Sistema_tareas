@@ -122,7 +122,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ?>
             
             <form method="POST">
-                <label>📘 Materia</label>
+                <label>Materia</label>
                 <select name="materia" required>
                     <option value="" disabled selected>Selecciona una materia...</option>
                     <option value="SISTEMAS DISTRIBUIDOS">SISTEMAS DISTRIBUIDOS</option>
@@ -133,25 +133,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <option value="COMPUTACIÓN MÓVIL">COMPUTACIÓN MÓVIL</option>
                 </select>
 
-                <label>🏷️ Tipo de Actividad</label>
+                <label>Tipo de Actividad</label>
                 <select name="tipo">
-                    <option value="tarea">📝 Tarea (Entregable)</option>
-                    <option value="test">🎓 Test / Lección</option>
+                    <option value="tarea">Tarea (Entregable)</option>
+                    <option value="test">Test / Lección</option>
                 </select>
 
-                <label>📝 Título</label>
+                <label>Título</label>
                 <input type="text" name="titulo" placeholder="Ej: Proyecto en QGIS" required>
                 
-                <label>ℹ️ Descripción</label>
+                <label>Descripción</label>
                 <textarea name="descripcion" rows="3" placeholder="Detalles de la entrega..."></textarea>
                 
                 <div style="display: flex; gap: 1rem;">
                     <div style="flex: 1;">
-                        <label>📅 Apertura</label>
+                        <label>Apertura</label>
                         <input type="date" name="fecha_apertura" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>⌛ Entrega</label>
+                        <label>Entrega</label>
                         <input type="date" name="fecha_entrega" required>
                     </div>
                 </div>
