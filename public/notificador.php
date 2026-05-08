@@ -42,8 +42,16 @@ if (!$appUrl && file_exists(__DIR__ . '/../.env')) {
 }
 
 $mensaje = "🔔 *REPORTE DE TAREAS* 🔔\n\n";
-$mensaje .= "Tienes *{$totalTareas}* actividades pendientes para los próximos 7 días.\n\n";
-$mensaje .= "🔗 *Ver detalles en el Panel:* \n[Abrir Panel de Control]($appUrl/vencimientos.php)";
+$mensaje .= "Tienes *{$totalTareas}* actividades por entregar en los próximos 7 días:\n\n";
+
+foreach ($tareas as $t) {
+    $icono = ($t['tipo'] == 'test') ? "🎓" : "📝";
+    $dias = $t['dias_restantes'];
+    $plazo = ($dias == 0) ? "*¡HOY!*" : ($dias == 1 ? "mañana" : "en $dias días");
+    $mensaje .= "{$icono} *{$t['titulo']}* - {$plazo}\n";
+}
+
+$mensaje .= "\n🔗 *Panel de Control:* \n[Abrir para más detalles]($appUrl/vencimientos.php)";
 $mensaje .= "\n\n🚀 _¡A estudiar se ha dicho!_";
 
 // 4. ENVIAR A TODOS LOS SUSCRIPTORES

@@ -226,10 +226,6 @@ foreach ($tareas as $t) {
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
-
-        <footer style="margin-top: 4rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
-            <p>&copy; <?php echo date('Y'); ?> Asistente UNEMI - Gestión de Tareas</p>
-        </footer>
     </div>
 
     <script>

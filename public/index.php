@@ -33,53 +33,132 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Asignaciones</title>
     <style>
-        body { font-family: system-ui, sans-serif; background: #f0f2f5; padding: 0; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #333; }
-        input, textarea, button { width: 100%; margin-bottom: 1.5rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #0d6efd; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 1rem; }
-        button:hover { background: #0b5ed7; }
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-primary: #1c1e21;
+            --text-secondary: #65676b;
+            --accent-blue: #0d6efd;
+            --accent-hover: #0b5ed7;
+            --border-color: #dddfe2;
+        }
+
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-color); padding: 0; margin: 0; color: var(--text-primary); }
+        
+        .form-container { display: flex; justify-content: center; padding: 2rem 1rem; }
+        
+        .card { 
+            background: var(--card-bg); 
+            padding: 2.5rem; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+            width: 100%; 
+            max-width: 450px; 
+            border: 1px solid var(--border-color);
+        }
+
+        h2 { margin-top: 0; color: var(--text-primary); font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; text-align: center; }
+
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4b4f56; font-size: 0.9rem; }
+
+        input, textarea, select { 
+            width: 100%; 
+            margin-bottom: 1.25rem; 
+            padding: 0.75rem 1rem; 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 0.95rem;
+            background-color: #f5f6f7;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+        }
+
+        button { 
+            background: var(--accent-blue); 
+            color: white; 
+            border: none; 
+            padding: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 1rem; 
+            width: 100%;
+            transition: background 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        button:hover { background: var(--accent-hover); }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .alert-success { color: #155724; background: #d4edda; border: 1px solid #c3e6cb; }
+        .alert-error { color: #721c24; background: #f8d7da; border: 1px solid #f5c6cb; }
     </style>
 </head>
 <body>
-    <div style="width: 100%; padding-bottom: 2rem;">
-        <?php include 'navbar.php'; ?>
-        <div class="card" style="margin: 0 auto;">
-        <h2 style="margin-top: 0; color: #1a1a1a;">Añadir Tarea</h2>
-        <?php echo $mensaje; ?>
-        
-        <form method="POST">
-            <label>Materia:</label>
-            <select name="materia" style="width: 100%; margin-bottom: 1.5rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; background: white;" required>
-                <option value="" disabled selected>Selecciona una materia...</option>
-                <option value="SISTEMAS DISTRIBUIDOS">SISTEMAS DISTRIBUIDOS</option>
-                <option value="SISTEMA DE GESTIÓN DE LA SEGURIDAD DE LA INFORMACIÓN">SISTEMA DE GESTIÓN DE LA SEGURIDAD DE LA INFORMACIÓN</option>
-                <option value="PRÁCTICAS LABORALES II">PRÁCTICAS LABORALES II</option>
-                <option value="GESTIÓN DE SISTEMAS DE CALIDAD">GESTIÓN DE SISTEMAS DE CALIDAD</option>
-                <option value="FORMULACIÓN Y EVALUACIÓN DEL TRABAJO DE TITULACIÓN">FORMULACIÓN Y EVALUACIÓN DEL TRABAJO DE TITULACIÓN</option>
-                <option value="COMPUTACIÓN MÓVIL">COMPUTACIÓN MÓVIL</option>
-            </select>
-
-            <label>Tipo de Actividad:</label>
-            <select name="tipo" style="width: 100%; margin-bottom: 1.5rem; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; background: white;">
-                <option value="tarea">📝 Tarea (Entregable)</option>
-                <option value="test">🎓 Test / Lección</option>
-            </select>
-
-            <label>Título de la tarea:</label>
-            <input type="text" name="titulo" placeholder="Ej: Proyecto en QGIS" required>
+    <?php include 'navbar.php'; ?>
+    
+    <div class="form-container">
+        <div class="card">
+            <h2>Añadir Nueva Tarea</h2>
             
-            <label>Descripción o anotaciones:</label>
-            <textarea name="descripcion" rows="3" placeholder="Detalles de la entrega..."></textarea>
+            <?php 
+            if ($mensaje) {
+                $class = (strpos($mensaje, 'éxito') !== false) ? 'alert-success' : 'alert-error';
+                echo "<div class='alert {$class}'>" . strip_tags($mensaje) . "</div>";
+            }
+            ?>
             
-            <label>Fecha de apertura:</label>
-            <input type="date" name="fecha_apertura" required>
+            <form method="POST">
+                <label>📘 Materia</label>
+                <select name="materia" required>
+                    <option value="" disabled selected>Selecciona una materia...</option>
+                    <option value="SISTEMAS DISTRIBUIDOS">SISTEMAS DISTRIBUIDOS</option>
+                    <option value="SISTEMA DE GESTIÓN DE LA SEGURIDAD DE LA INFORMACIÓN">SISTEMA DE GESTIÓN DE LA SEGURIDAD DE LA INFORMACIÓN</option>
+                    <option value="PRÁCTICAS LABORALES II">PRÁCTICAS LABORALES II</option>
+                    <option value="GESTIÓN DE SISTEMAS DE CALIDAD">GESTIÓN DE SISTEMAS DE CALIDAD</option>
+                    <option value="FORMULACIÓN Y EVALUACIÓN DEL TRABAJO DE TITULACIÓN">FORMULACIÓN Y EVALUACIÓN DEL TRABAJO DE TITULACIÓN</option>
+                    <option value="COMPUTACIÓN MÓVIL">COMPUTACIÓN MÓVIL</option>
+                </select>
 
-            <label>Fecha máxima de entrega:</label>
-            <input type="date" name="fecha_entrega" required>
-            
-            <button type="submit">Guardar Tarea</button>
-        </form>
+                <label>🏷️ Tipo de Actividad</label>
+                <select name="tipo">
+                    <option value="tarea">📝 Tarea (Entregable)</option>
+                    <option value="test">🎓 Test / Lección</option>
+                </select>
+
+                <label>📝 Título</label>
+                <input type="text" name="titulo" placeholder="Ej: Proyecto en QGIS" required>
+                
+                <label>ℹ️ Descripción</label>
+                <textarea name="descripcion" rows="3" placeholder="Detalles de la entrega..."></textarea>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <div style="flex: 1;">
+                        <label>📅 Apertura</label>
+                        <input type="date" name="fecha_apertura" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>⌛ Entrega</label>
+                        <input type="date" name="fecha_entrega" required>
+                    </div>
+                </div>
+                
+                <button type="submit">Guardar Tarea</button>
+            </form>
+        </div>
     </div>
 </body>
-</html>
+</html>
