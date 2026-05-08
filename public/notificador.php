@@ -42,17 +42,22 @@ if (!$appUrl && file_exists(__DIR__ . '/../.env')) {
 }
 
 $mensaje = "🔔 *REPORTE DE TAREAS* 🔔\n\n";
-$mensaje .= "Tienes *{$totalTareas}* actividades por entregar en los próximos 7 días:\n\n";
+$mensaje .= "Tienes *{$totalTareas}* actividades por entregar:\n";
 
 foreach ($tareas as $t) {
     $icono = ($t['tipo'] == 'test') ? "🎓" : "📝";
     $dias = $t['dias_restantes'];
-    $plazo = ($dias == 0) ? "*¡HOY!*" : ($dias == 1 ? "mañana" : "en $dias días");
-    $mensaje .= "{$icono} *{$t['titulo']}* - {$plazo}\n";
+    $plazo = ($dias == 0) ? "*¡VENCE HOY!*" : "vence en $dias días";
+    
+    $materia = str_replace(['_', '*', '`'], ' ', $t['materia']);
+    
+    $mensaje .= "\n📘 *{$materia}*\n";
+    $mensaje .= "{$icono} *{$t['titulo']}*\n";
+    $mensaje .= "📅 *Inicio:* {$t['fecha_apertura']}\n";
+    $mensaje .= "⌛ *Cierre:* {$t['fecha_entrega']} ({$plazo})\n";
 }
 
-$mensaje .= "\n🔗 *Panel de Control:* \n[Abrir para más detalles]($appUrl/vencimientos.php)";
-$mensaje .= "\n\n🚀 _¡A estudiar se ha dicho!_";
+$mensaje .= "\n🚀 _¡A estudiar se ha dicho!_";
 
 // 4. ENVIAR A TODOS LOS SUSCRIPTORES
 $stmtSubs = $db->prepare("SELECT chat_id, nombre FROM suscriptores");
