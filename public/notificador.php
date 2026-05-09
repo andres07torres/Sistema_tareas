@@ -1,18 +1,30 @@
 <?php
+ob_start(); // Prevenir cualquier salida accidental
+
 // 1. CONFIGURACIÓN Y SEGURIDAD
 $telegramToken = $_ENV['TELEGRAM_TOKEN'] ?? getenv('TELEGRAM_TOKEN');
 $token_seguridad = $_ENV['CRON_TOKEN'] ?? getenv('CRON_TOKEN');
 
-// Carga local si falla lo anterior
+// Carga local de variables de entorno si existen
 if (!$telegramToken && file_exists(__DIR__ . '/../.env')) {
     $env = parse_ini_file(__DIR__ . '/../.env');
-    $telegramToken = $env['TELEGRAM_TOKEN'];
-    $token_seguridad = $env['CRON_TOKEN'];
+    $telegramToken = $env['TELEGRAM_TOKEN'] ?? '';
+    $token_seguridad = $env['CRON_TOKEN'] ?? '';
 }
 
+// Validación de token
 if (!isset($_GET['token']) || $_GET['token'] !== $token_seguridad) {
     header('HTTP/1.1 401 Unauthorized');
+    ob_end_clean();
     die("Token de seguridad inválido.");
+}
+
+// MODO DESPERTADOR (PING)
+if (isset($_GET['ping']) && $_GET['ping'] === 'true') {
+    ob_end_clean();
+    header('Content-Type: text/plain');
+    echo "AWAKE";
+    exit;
 }
 
 require_once __DIR__ . '/../config/database.php';
@@ -30,10 +42,12 @@ $stmt->execute();
 $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (count($tareas) === 0) {
-    die("No hay tareas urgentes hoy.");
+    ob_end_clean();
+    echo "No hay tareas hoy.";
+    exit;
 }
 
-// 3. CONSTRUIR EL MENSAJE (Versión ultraligera para evitar errores de tamaño)
+// 3. CONSTRUIR EL MENSAJE
 $totalTareas = count($tareas);
 $appUrl = $_ENV['APP_URL'] ?? getenv('APP_URL');
 if (!$appUrl && file_exists(__DIR__ . '/../.env')) {
@@ -48,7 +62,6 @@ foreach ($tareas as $t) {
     $icono = ($t['tipo'] == 'test') ? "🎓" : "📝";
     $dias = $t['dias_restantes'];
     $plazo = ($dias == 0) ? "*¡VENCE HOY!*" : "vence en $dias días";
-    
     $materia = str_replace(['_', '*', '`'], ' ', $t['materia']);
     
     $mensaje .= "\n📘 *{$materia}*\n";
@@ -59,21 +72,15 @@ foreach ($tareas as $t) {
 
 $mensaje .= "\n🚀 _¡A estudiar se ha dicho!_";
 
-// 4. ENVIAR A TODOS LOS SUSCRIPTORES
-$stmtSubs = $db->prepare("SELECT chat_id, nombre FROM suscriptores");
+// 4. ENVIAR A SUSCRIPTORES
+$stmtSubs = $db->prepare("SELECT chat_id FROM suscriptores");
 $stmtSubs->execute();
 $suscriptores = $stmtSubs->fetchAll(PDO::FETCH_ASSOC);
 
 $enviados = 0;
-$errores = 0;
-
 foreach ($suscriptores as $sub) {
     $url = "https://api.telegram.org/bot{$telegramToken}/sendMessage";
-    $data = [
-        'chat_id' => $sub['chat_id'],
-        'text' => $mensaje,
-        'parse_mode' => 'Markdown'
-    ];
+    $data = ['chat_id' => $sub['chat_id'], 'text' => $mensaje, 'parse_mode' => 'Markdown'];
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -81,16 +88,14 @@ foreach ($suscriptores as $sub) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
     $res = json_decode(curl_exec($ch), true);
     curl_close($ch);
 
-    if ($res && $res['ok']) {
-        $enviados++;
-    } else {
-        $errores++;
-    }
+    if ($res && $res['ok']) $enviados++;
 }
 
-echo "Proceso completado.\n✅ Enviados: $enviados\n❌ Errores: $errores";
-?>
+// RESPUESTA FINAL LIGERA PARA EL CRON-JOB
+ob_end_clean();
+header('Content-Type: text/plain');
+echo "OK";
+exit;
