@@ -19,14 +19,6 @@ if (!isset($_GET['token']) || $_GET['token'] !== $token_seguridad) {
     die("Token de seguridad inválido.");
 }
 
-// MODO DESPERTADOR (PING)
-if (isset($_GET['ping']) && $_GET['ping'] === 'true') {
-    ob_end_clean();
-    header('Content-Type: text/plain');
-    echo "AWAKE";
-    exit;
-}
-
 require_once __DIR__ . '/../config/database.php';
 $db = (new Database())->getConnection();
 
