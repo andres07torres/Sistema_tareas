@@ -2,8 +2,8 @@ name: Notificador Diario Tareas UNEMI
 
 on:
   schedule:
-    # 15:00 UTC es igual a las 10:00 AM en Ecuador (GMT-5)
-    - cron: '0 15 * * *'
+    # 16:00 UTC es igual a las 11:00 AM en Ecuador (GMT-5)
+    - cron: '0 16 * * *'
   workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub para probar
 
 jobs:
