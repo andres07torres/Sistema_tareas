@@ -140,7 +140,8 @@
     </a>
 
     <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
-        <i data-lucide="menu" id="menuIcon"></i>
+        <i data-lucide="menu" class="icon-menu"></i>
+        <i data-lucide="x" class="icon-close" style="display: none;"></i>
     </button>
 
     <div class="nav-links" id="navLinks">
@@ -161,39 +162,49 @@
 
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
-    // Inicializar iconos
-    lucide.createIcons();
-
-    // Lógica del menú hamburguesa
-    const menuToggle = document.getElementById('menuToggle');
-    const navLinks = document.getElementById('navLinks');
-    const menuIcon = document.getElementById('menuIcon');
-
-    menuToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-        const isActive = navLinks.classList.contains('active');
-        
-        // Cambiar icono entre menu y x
-        menuIcon.setAttribute('data-lucide', isActive ? 'x' : 'menu');
+    document.addEventListener('DOMContentLoaded', () => {
+        // Inicializar iconos
         lucide.createIcons();
-    });
 
-    // Cerrar menú al hacer clic fuera
-    document.addEventListener('click', (e) => {
-        if (!menuToggle.contains(e.target) && !navLinks.contains(e.target) && navLinks.classList.contains('active')) {
-            navLinks.classList.remove('active');
-            menuIcon.setAttribute('data-lucide', 'menu');
-            lucide.createIcons();
-        }
-    });
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
+        const iconMenu = menuToggle.querySelector('.icon-menu');
+        const iconClose = menuToggle.querySelector('.icon-close');
 
-    // Resaltar link activo
-    const currentPath = window.location.pathname.split('/').pop() || 'index.php';
-    document.querySelectorAll('.nav-links a').forEach(link => {
-        if (link.getAttribute('href') === currentPath) {
-            link.style.background = 'rgba(255,255,255,0.15)';
-            link.style.color = '#fff';
-            link.style.boxShadow = 'inset 0 0 0 1px rgba(255,255,255,0.2)';
+        function toggleMenu(forceClose = false) {
+            const isOpening = forceClose ? false : !navLinks.classList.contains('active');
+            
+            if (isOpening) {
+                navLinks.classList.add('active');
+                iconMenu.style.display = 'none';
+                iconClose.style.display = 'block';
+            } else {
+                navLinks.classList.remove('active');
+                iconMenu.style.display = 'block';
+                iconClose.style.display = 'none';
+            }
         }
+
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu();
+        });
+
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (navLinks.classList.contains('active') && !navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+                toggleMenu(true);
+            }
+        });
+
+        // Resaltar link activo
+        const currentPath = window.location.pathname.split('/').pop() || 'index.php';
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.style.background = 'rgba(255,255,255,0.15)';
+                link.style.color = '#fff';
+                link.style.boxShadow = 'inset 0 0 0 1px rgba(255,255,255,0.2)';
+            }
+        });
     });
 </script>
