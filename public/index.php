@@ -33,8 +33,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // 1. IMPORTACIÓN CSV
     if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
         $file = $_FILES['csv_file']['tmp_name'];
+        $content = file_get_contents($file);
+        // Detectar delimitador (coma o punto y coma)
+        $delimiter = (strpos(fgets(fopen($file, 'r')), ';') !== false) ? ';' : ',';
+        
         $handle = fopen($file, "r");
-        $header = fgetcsv($handle, 1000, ","); // Leer cabecera
+        $header = fgetcsv($handle, 1000, $delimiter, "\"", "\\"); // Leer cabecera
         
         $count = 0;
         $errors = 0;
@@ -43,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   VALUES (:titulo, :descripcion, :fecha_entrega, :fecha_apertura, :materia, :tipo)";
         $stmt = $db->prepare($query);
 
-        while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+        while (($data = fgetcsv($handle, 1000, $delimiter, "\"", "\\")) !== FALSE) {
             // Esperamos: titulo, descripcion, fecha_entrega, fecha_apertura, materia, tipo
             if (count($data) >= 6) {
                 try {
@@ -280,9 +284,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="card" style="height: fit-content;">
                 <h2><i data-lucide="file-up"></i> Importar CSV</h2>
                 <div class="csv-info">
-                    <strong>Formato requerido (con cabecera):</strong><br>
-                    <code>titulo, descripcion, fecha_entrega, fecha_apertura, materia, tipo</code><br><br>
-                    <em>Nota: Las fechas deben ser YYYY-MM-DD.</em>
+                    <strong>Formato requerido:</strong><br>
+                    <code style="display:block; background:#eee; padding:5px; margin:5px 0; border-radius:4px; font-size:0.75rem;">titulo,descripcion,fecha_entrega,fecha_apertura,materia,tipo</code>
+                    <small>Ejemplo: "Tarea 1","Detalles","2024-05-20","2024-05-10","SISTEMAS DISTRIBUIDOS","tarea"</small>
+                    <br><br>
+                    <em>Nota: Use comas (,) o punto y coma (;) como separador.</em>
                 </div>
                 <form method="POST" enctype="multipart/form-data">
                     <label>Seleccionar Archivo .csv</label>
