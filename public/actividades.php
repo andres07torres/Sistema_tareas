@@ -30,7 +30,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Actividades | Asistente UNEMI</title>
+    <title>Gestión de Actividades | Asistente de Tareas</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -287,6 +287,51 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             font-weight: 700;
             cursor: pointer;
         }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn-add, .btn-import {
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .btn-add { background: var(--accent-blue); }
+        .btn-import { background: #10b981; }
+
+        .btn-add:hover, .btn-import:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        @media (max-width: 850px) {
+            header { flex-direction: column; align-items: stretch !important; gap: 1rem; }
+            .header-actions { order: -1; justify-content: space-between; }
+            .search-wrapper { width: 100% !important; }
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .header-actions { flex-direction: column; }
+            .header-actions button { width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -298,11 +343,22 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <h1>Gestión de Actividades</h1>
                 <p style="color: var(--text-secondary); font-size: 1rem; margin-top: 0.25rem;">Organiza y controla la visibilidad de tus tareas</p>
             </div>
+            <div class="header-actions">
+                <button class="btn-import" onclick="openImportModal()">
+                    <i data-lucide="file-up" size="18"></i> Importar CSV
+                </button>
+                <button class="btn-add" onclick="openAddModal()">
+                    <i data-lucide="plus-circle" size="18"></i> Nueva Actividad
+                </button>
+            </div>
+        </header>
+
+        <div style="margin-bottom: 2rem;">
             <div class="search-wrapper">
                 <i data-lucide="search" size="20"></i>
                 <input type="text" id="searchInput" placeholder="Buscar actividad, materia o descripción...">
             </div>
-        </header>
+        </div>
 
         <div class="table-container">
             <table id="tasksTable">
@@ -412,12 +468,34 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php endif; ?>
     </div>
 
-    <!-- MODAL DE EDICIÓN -->
+    <!-- MODAL DE IMPORTACIÓN CSV -->
+    <div id="importModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i data-lucide="upload-cloud"></i> Importar Actividades</h2>
+                <button class="close-modal" onclick="closeModal('importModal')"><i data-lucide="x" size="20"></i></button>
+            </div>
+            <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; border: 1px dashed var(--border-color);">
+                <strong>Formato CSV:</strong><br>
+                <code>titulo, descripcion, fecha_entrega, estado, materia, tipo, fecha_apertura</code>
+            </div>
+            <form id="importForm" class="modal-form">
+                <label>Seleccionar Archivo CSV</label>
+                <input type="file" name="csv_file" accept=".csv" required style="padding: 0.5rem; background: #fff;">
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal('importModal')">Cancelar</button>
+                    <button type="submit" class="btn-save" id="btnImportSubmit">Procesar Archivo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDICIÓN / ADICIÓN -->
     <div id="editModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modalTitle"><i data-lucide="edit"></i> Editar Actividad</h2>
-                <button class="close-modal" onclick="closeModal()"><i data-lucide="x" size="20"></i></button>
+                <button class="close-modal" onclick="closeModal('editModal')"><i data-lucide="x" size="20"></i></button>
             </div>
             <form id="editForm" class="modal-form">
                 <input type="hidden" name="id" id="editId">
@@ -428,7 +506,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal('editModal')">Cancelar</button>
                     <button type="submit" class="btn-save">Guardar Cambios</button>
                 </div>
             </form>
@@ -497,9 +575,19 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         // FUNCIONES DEL MODAL
-        const modal = document.getElementById('editModal');
+        const editModal = document.getElementById('editModal');
+        const importModal = document.getElementById('importModal');
         const editForm = document.getElementById('editForm');
         const formFields = document.getElementById('formFields');
+
+        function openAddModal() {
+            document.getElementById('editId').value = '';
+            document.getElementById('editTipo').value = 'tarea'; // Por defecto
+            renderForm({ tipo: 'tarea', titulo: '', descripcion: '', fecha_apertura: '', fecha_entrega: '', materia: '' });
+            document.getElementById('modalTitle').innerHTML = '<i data-lucide="plus-circle"></i> Nueva Actividad';
+            editModal.style.display = 'flex';
+            lucide.createIcons();
+        }
 
         async function openEditModal(id) {
             try {
@@ -512,7 +600,8 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     document.getElementById('editTipo').value = task.tipo;
                     
                     renderForm(task);
-                    modal.style.display = 'flex';
+                    document.getElementById('modalTitle').innerHTML = '<i data-lucide="edit"></i> Editar Actividad';
+                    editModal.style.display = 'flex';
                     lucide.createIcons();
                 } else {
                     alert(result.error);
@@ -522,8 +611,18 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
         }
 
-        function closeModal() {
-            modal.style.display = 'none';
+        function openImportModal() {
+            importModal.style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeModal(modalId) {
+            if (modalId) {
+                document.getElementById(modalId).style.display = 'none';
+            } else {
+                editModal.style.display = 'none';
+                importModal.style.display = 'none';
+            }
         }
 
         function renderForm(task) {
@@ -550,7 +649,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             `;
 
             const datesField = `
-                <div style="display: flex; gap: 1rem;">
+                <div class="form-row">
                     <div style="flex: 1;">
                         <label>Fecha Apertura</label>
                         <input type="date" name="fecha_apertura" value="${task.fecha_apertura || ''}" required>
@@ -603,9 +702,39 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
         };
 
+        const importForm = document.getElementById('importForm');
+        importForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const btnSubmit = document.getElementById('btnImportSubmit');
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Procesando...';
+
+            const formData = new FormData(importForm);
+            try {
+                const response = await fetch('api_import_csv.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Ocurrió un error al procesar el archivo.');
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Procesar Archivo';
+            }
+        };
+
         // Cerrar modal al hacer clic fuera
         window.onclick = function(event) {
-            if (event.target == modal) closeModal();
+            if (event.target == editModal) closeModal('editModal');
+            if (event.target == importModal) closeModal('importModal');
             if (!event.target.matches('.actions-btn') && !event.target.closest('.actions-btn')) {
                 document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
             }

@@ -1,269 +1,225 @@
 <?php
-// Proyecto dockerizado y configurado para Supabase
 require_once '../config/database.php';
-$mensaje = '';
 $db = (new Database())->getConnection();
 
-// Lógica para cargar datos si se está editando
-$edit_mode = false;
-$tarea_actual = [
-    'id' => '',
-    'titulo' => '',
-    'descripcion' => '',
-    'fecha_entrega' => '',
-    'fecha_apertura' => '',
-    'materia' => '',
-    'tipo' => 'tarea',
-    'estado' => 'pendiente'
-];
+// Estadísticas rápidas
+$total_pendientes = $db->query("SELECT COUNT(*) FROM tareas WHERE estado = 'pendiente'")->fetchColumn();
+$total_hoy = $db->query("SELECT COUNT(*) FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE")->fetchColumn();
+$total_semana = $db->query("SELECT COUNT(*) FROM tareas WHERE estado = 'pendiente' AND fecha_entrega BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '7 days')")->fetchColumn();
 
-if (isset($_GET['edit'])) {
-    $id_edit = $_GET['edit'];
-    $stmt_edit = $db->prepare("SELECT * FROM tareas WHERE id = :id");
-    $stmt_edit->execute([':id' => $id_edit]);
-    $res = $stmt_edit->fetch(PDO::FETCH_ASSOC);
-    if ($res) {
-        $tarea_actual = $res;
-        $edit_mode = true;
-    }
-}
+// Próximas 5 tareas
+$stmt = $db->prepare("SELECT * FROM tareas WHERE estado = 'pendiente' ORDER BY fecha_entrega ASC LIMIT 5");
+$stmt->execute();
+$proximas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// --- MANEJO DE POST ---
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
-    // 1. IMPORTACIÓN CSV
-    if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
-        $file = $_FILES['csv_file']['tmp_name'];
-        
-        // Detectar delimitador
-        $f = fopen($file, 'r');
-        $firstLine = fgets($f);
-        fclose($f);
-        $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
-        
-        $handle = fopen($file, "r");
-        $header = fgetcsv($handle, 1000, $delimiter, "\"", "\\"); // Saltar cabecera
-        
-        $count = 0;
-        $errors = [];
-        $lineNum = 1;
-
-        $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, estado, materia, tipo, fecha_apertura) 
-                  VALUES (:titulo, :descripcion, :fecha_entrega, :estado, :materia, :tipo, :fecha_apertura)";
-        $stmt = $db->prepare($query);
-
-        while (($data = fgetcsv($handle, 1000, $delimiter, "\"", "\\")) !== FALSE) {
-            $lineNum++;
-            if (empty(array_filter($data))) continue;
-
-            if (count($data) >= 7) {
-                try {
-                    // Limpiar descripción y convertir a NULL si está vacía o es 'EMPTY'
-                    $descripcion = trim($data[1]);
-                    if ($descripcion === "" || strtoupper($descripcion) === "EMPTY") {
-                        $descripcion = null;
-                    }
-
-                    $stmt->execute([
-                        ':titulo'         => trim($data[0]),
-                        ':descripcion'    => $descripcion,
-                        ':fecha_entrega'  => trim($data[2]),
-                        ':estado'         => trim($data[3]) ?: 'pendiente',
-                        ':materia'        => trim($data[4]),
-                        ':tipo'           => trim($data[5]),
-                        ':fecha_apertura' => trim($data[6])
-                    ]);
-                    $count++;
-                } catch (Exception $e) {
-                    $errors[] = "Línea $lineNum: " . $e->getMessage();
-                }
-            } else {
-                $errors[] = "Línea $lineNum: Columnas insuficientes.";
-            }
-        }
-        fclose($handle);
-        
-        if (empty($errors)) {
-            $mensaje = "<div class='alert alert-success'>¡Éxito! Se importaron $count tareas.</div>";
-        } else {
-            $mensaje = "<div class='alert alert-error'>Importación finalizada con " . count($errors) . " errores. ($count éxitos)</div>";
-        }
-    }
-    
-    // 2. FORMULARIO MANUAL
-    elseif (isset($_POST['titulo'])) {
-        $id = $_POST['id'] ?? null;
-        $descripcion = trim($_POST['descripcion']);
-        if ($descripcion === "" || strtoupper($descripcion) === "EMPTY") {
-            $descripcion = null;
-        }
-
-        if ($id) {
-            $query = "UPDATE tareas SET titulo = :titulo, descripcion = :descripcion, fecha_entrega = :fecha_entrega, 
-                      fecha_apertura = :fecha_apertura, materia = :materia, tipo = :tipo WHERE id = :id";
-            $params = [
-                ':titulo' => trim($_POST['titulo']),
-                ':descripcion' => $descripcion,
-                ':fecha_entrega' => trim($_POST['fecha_entrega']),
-                ':fecha_apertura' => trim($_POST['fecha_apertura']),
-                ':materia' => trim($_POST['materia']),
-                ':tipo' => trim($_POST['tipo']),
-                ':id' => $id
-            ];
-        } else {
-            $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, fecha_apertura, materia, tipo) 
-                      VALUES (:titulo, :descripcion, :fecha_entrega, :fecha_apertura, :materia, :tipo)";
-            $params = [
-                ':titulo' => trim($_POST['titulo']),
-                ':descripcion' => $descripcion,
-                ':fecha_entrega' => trim($_POST['fecha_entrega']),
-                ':fecha_apertura' => trim($_POST['fecha_apertura']),
-                ':materia' => trim($_POST['materia']),
-                ':tipo' => trim($_POST['tipo'])
-            ];
-        }
-
-        try {
-            $db->prepare($query)->execute($params);
-            $mensaje = "<div class='alert alert-success'>Tarea guardada correctamente.</div>";
-        } catch (Exception $e) {
-            $mensaje = "<div class='alert alert-error'>Error: " . $e->getMessage() . "</div>";
-        }
-    }
-}
+// Tareas por materia (Top 3)
+$materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE estado = 'pendiente' GROUP BY materia ORDER BY total DESC LIMIT 3")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $edit_mode ? 'Editar Tarea' : 'Gestor de Tareas'; ?></title>
+    <title>Dashboard | Asistente de Tareas</title>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #65676b;
-            --accent-blue: #0d6efd;
-            --border-color: #dddfe2;
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
         }
 
-        body { font-family: system-ui, sans-serif; background: var(--bg-color); margin: 0; color: var(--text-primary); }
-        
-        .container { max-width: 950px; margin: 0 auto; padding: 2rem 1rem; }
-        
-        h1 {
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: #0f172a;
-            letter-spacing: -0.025em;
-            margin-bottom: 0.5rem;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background: #f0f2f5;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        .form-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
 
-        .card { 
-            background: var(--card-bg); 
-            padding: 2rem; 
-            border-radius: 12px; 
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
-            border: 1px solid var(--border-color);
-        }
-
-        h2 { margin-top: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; }
-
-        label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: #4b4f56; font-size: 0.85rem; }
-
-        input, textarea, select { 
-            width: 100%; 
-            margin-bottom: 1rem; 
-            padding: 0.7rem; 
-            border: 1px solid var(--border-color); 
-            border-radius: 8px; 
-            box-sizing: border-box; 
-            font-size: 0.9rem;
-            background-color: #f5f6f7;
-            transition: all 0.2s ease;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-            background-color: #fff;
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
-        }
-
-        .btn-primary { 
-            background: var(--accent-blue); 
-            color: white; 
-            border: none; 
-            padding: 0.8rem 2rem;
-            border-radius: 8px;
-            cursor: pointer; 
-            font-weight: 700; 
-            font-size: 0.95rem; 
-            display: inline-block;
-        }
-
-        .btn-danger { 
-            background: #dc3545; 
-            color: white; 
-            border: none; 
-            padding: 0.8rem 2rem;
-            border-radius: 8px;
-            cursor: pointer; 
-            font-weight: 700; 
-            font-size: 0.95rem; 
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .button-group {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .btn-csv {
-            background: #198754;
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 3rem 2rem;
+            border-radius: 24px;
             color: white;
-            border: none;
-            padding: 0.8rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            width: 100%;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+            filter: blur(40px);
+        }
+
+        .hero h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+        .hero p { font-size: 1.1rem; opacity: 0.8; font-weight: 300; }
+
+        /* Stats Grid */
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+            gap: 1.5rem; 
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            padding: 1.75rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            width: 50px; height: 50px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .icon-blue { background: #eff6ff; color: #3b82f6; }
+        .icon-orange { background: #fff7ed; color: #f97316; }
+        .icon-purple { background: #faf5ff; color: #a855f7; }
+
+        .stat-content .label { font-size: 0.875rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-content .value { font-size: 2rem; font-weight: 800; color: var(--text-main); margin-top: 0.25rem; }
+
+        /* Dashboard Layout */
+        .main-grid { 
+            display: grid; 
+            grid-template-columns: 1.6fr 1fr; 
+            gap: 2rem; 
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .card-header h2 { font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.75rem; }
+
+        /* Task List */
+        .task-list { display: flex; flex-direction: column; gap: 1rem; }
+        .task-item {
+            background: #f8fafc;
+            padding: 1.25rem;
+            border-radius: 16px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .alert {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            font-weight: 500;
+            justify-content: space-between;
+            transition: all 0.2s;
             border: 1px solid transparent;
         }
-        .alert-success { color: #155724; background: #d4edda; border-color: #c3e6cb; }
-        .alert-error { color: #721c24; background: #f8d7da; border-color: #f5c6cb; }
 
-        .csv-info {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
-            border: 1px dashed #ced4da;
+        .task-item:hover {
+            background: white;
+            border-color: #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transform: scale(1.01);
         }
 
-        @media (max-width: 768px) {
-            .form-grid { grid-template-columns: 1fr; }
+        .task-info { display: flex; flex-direction: column; gap: 0.4rem; }
+        .task-title { font-weight: 700; color: var(--text-main); font-size: 1.05rem; }
+        .task-materia { font-size: 0.8rem; color: var(--primary); font-weight: 700; }
+        
+        .task-date { 
+            display: flex; align-items: center; gap: 0.4rem; 
+            font-size: 0.85rem; color: var(--text-muted); 
+            background: white; padding: 0.4rem 0.75rem; border-radius: 10px;
+            border: 1px solid #f1f5f9;
+        }
+
+        /* Subjects Section */
+        .subject-card {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #f1f5f9;
+        }
+
+        .subject-info { display: flex; align-items: center; gap: 1rem; }
+        .subject-initials {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: #f1f5f9; color: var(--text-main);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 0.8rem;
+        }
+
+        .progress-container { width: 100%; height: 6px; background: #f1f5f9; border-radius: 10px; margin-top: 0.5rem; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--primary); border-radius: 10px; transition: width 1s ease; }
+
+        .btn-action {
+            width: 100%; padding: 1rem; margin-top: 1.5rem;
+            border: none; border-radius: 14px;
+            background: #f1f5f9; color: var(--text-main);
+            font-weight: 700; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            text-decoration: none;
+        }
+        .btn-action:hover { background: var(--text-main); color: white; }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .hero { padding: 2rem 1.5rem; }
+            .hero h1 { font-size: 1.75rem; }
+            .container { padding: 1.5rem 1rem; }
         }
     </style>
 </head>
@@ -271,83 +227,122 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <?php include 'navbar.php'; ?>
     
     <div class="container">
-        <header style="margin-bottom: 2rem;">
-            <h1>Añadir Nueva Tarea</h1>
-            <p style="color: var(--text-secondary); font-size: 1rem; margin-top: 0.25rem;">Registra manualmente o importa tus actividades académicas</p>
-        </header>
-        <?php echo $mensaje; ?>
+        <!-- Hero Section -->
+        <div class="hero">
+            <div style="position: relative; z-index: 2;">
+                <h1>¡Hola de nuevo!</h1>
+                <p>Tienes <strong><?php echo $total_pendientes; ?></strong> actividades pendientes en total. ¡Tú puedes!</p>
+            </div>
+        </div>
 
-        <div class="form-grid">
-            <!-- FORMULARIO MANUAL -->
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-blue"><i data-lucide="layers"></i></div>
+                <div class="stat-content">
+                    <div class="label">Total Pendientes</div>
+                    <div class="value"><?php echo $total_pendientes; ?></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-orange"><i data-lucide="alert-circle"></i></div>
+                <div class="stat-content">
+                    <div class="label">Para Hoy</div>
+                    <div class="value"><?php echo $total_hoy; ?></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-purple"><i data-lucide="calendar-check"></i></div>
+                <div class="stat-content">
+                    <div class="label">Esta Semana</div>
+                    <div class="value"><?php echo $total_semana; ?></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Column: Upcoming Tasks -->
             <div class="card">
-                <h2><i data-lucide="<?php echo $edit_mode ? 'edit' : 'plus-circle'; ?>"></i> <?php echo $edit_mode ? 'Editar Tarea' : 'Nueva Tarea'; ?></h2>
-                <form method="POST">
-                    <?php if ($edit_mode): ?>
-                        <input type="hidden" name="id" value="<?php echo $tarea_actual['id']; ?>">
-                    <?php endif; ?>
-
-                    <label>Materia</label>
-                    <select name="materia" required>
-                        <option value="" disabled <?php echo empty($tarea_actual['materia']) ? 'selected' : ''; ?>>Selecciona...</option>
-                        <?php
-                        $materias = ["SISTEMAS DISTRIBUIDOS", "SISTEMA DE GESTIÓN DE LA SEGURIDAD DE LA INFORMACIÓN", "PRÁCTICAS LABORALES II", "GESTIÓN DE SISTEMAS DE CALIDAD", "FORMULACIÓN Y EVALUACIÓN DEL TRABAJO DE TITULACIÓN", "COMPUTACIÓN MÓVIL"];
-                        foreach ($materias as $m) {
-                            $sel = ($tarea_actual['materia'] == $m) ? 'selected' : '';
-                            echo "<option value='$m' $sel>$m</option>";
-                        }
+                <div class="card-header">
+                    <h2><i data-lucide="sparkles" style="color: #f59e0b;"></i> Próximos Desafíos</h2>
+                    <a href="actividades.php" style="font-size: 0.85rem; font-weight: 700; color: var(--primary); text-decoration: none;">Ver todo</a>
+                </div>
+                
+                <div class="task-list">
+                    <?php if (empty($proximas)): ?>
+                        <div style="text-align: center; padding: 3rem 0;">
+                            <i data-lucide="party-popper" size="48" style="opacity: 0.2; margin-bottom: 1rem;"></i>
+                            <p style="color: var(--text-muted);">¡Excelente trabajo! No tienes tareas pendientes.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($proximas as $t): 
+                            $dias = (strtotime($t['fecha_entrega']) - strtotime(date('Y-m-d'))) / 86400;
+                            $urgencyColor = ($dias <= 1) ? 'var(--danger)' : (($dias <= 3) ? 'var(--warning)' : 'var(--success)');
                         ?>
-                    </select>
-
-                    <label>Tipo</label>
-                    <select name="tipo">
-                        <option value="tarea" <?php echo $tarea_actual['tipo'] == 'tarea' ? 'selected' : ''; ?>>Tarea (Entregable)</option>
-                        <option value="test" <?php echo $tarea_actual['tipo'] == 'test' ? 'selected' : ''; ?>>Test / Lección</option>
-                        <option value="foro" <?php echo $tarea_actual['tipo'] == 'foro' ? 'selected' : ''; ?>>Foro</option>
-                    </select>
-
-                    <label>Título</label>
-                    <input type="text" name="titulo" required value="<?php echo htmlspecialchars($tarea_actual['titulo'] ?? ''); ?>">
-                    
-                    <label>Descripción</label>
-                    <textarea name="descripcion" rows="3"><?php echo htmlspecialchars($tarea_actual['descripcion'] ?? ''); ?></textarea>
-                    
-                    <div style="display: flex; gap: 1rem;">
-                        <div style="flex: 1;">
-                            <label>Apertura</label>
-                            <input type="date" name="fecha_apertura" required value="<?php echo $tarea_actual['fecha_apertura']; ?>">
-                        </div>
-                        <div style="flex: 1;">
-                            <label>Entrega</label>
-                            <input type="date" name="fecha_entrega" required value="<?php echo $tarea_actual['fecha_entrega']; ?>">
-                        </div>
-                    </div>
-                    
-                    <div class="button-group">
-                        <button type="submit" class="btn-primary"><?php echo $edit_mode ? 'Actualizar' : 'Guardar'; ?></button>
-                        <?php if ($edit_mode): ?>
-                            <a href="actividades.php" class="btn-danger">Cancelar</a>
-                        <?php else: ?>
-                             <a href="index.php" class="btn-danger">Limpiar</a>
-                        <?php endif; ?>
-                    </div>
-                </form>
+                            <div class="task-item">
+                                <div class="task-info">
+                                    <div class="task-materia"><?php echo htmlspecialchars($t['materia']); ?></div>
+                                    <div class="task-title"><?php echo htmlspecialchars($t['titulo']); ?></div>
+                                    <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem;">
+                                        <div class="task-date">
+                                            <i data-lucide="calendar" size="14"></i>
+                                            <?php echo date('d M', strtotime($t['fecha_entrega'])); ?>
+                                        </div>
+                                        <div class="task-date" style="color: <?php echo $urgencyColor; ?>; font-weight: 800;">
+                                            <i data-lucide="clock" size="14"></i>
+                                            <?php echo ($dias == 0) ? 'Hoy' : (($dias == 1) ? 'Mañana' : "$dias días"); ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="font-size: 0.65rem; font-weight: 800; background: #eff6ff; color: #3b82f6; padding: 0.3rem 0.6rem; border-radius: 6px; text-transform: uppercase;">
+                                        <?php echo $t['tipo']; ?>
+                                    </span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
 
-            <!-- IMPORTACIÓN CSV -->
-            <div class="card" style="height: fit-content;">
-                <h2><i data-lucide="file-up"></i> Importar CSV</h2>
-                <div class="csv-info">
-                    <strong>Formato de tu archivo:</strong><br>
-                    <code>titulo, descripcion, fecha_entrega, estado, materia, tipo, fecha_apertura</code><br><br>
-                    <em>Nota: Asegúrate de que las fechas sean AAAA-MM-DD.</em>
+            <!-- Right Column: Materials & Actions -->
+            <div class="side-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i data-lucide="book-open"></i> Materias Top</h2>
+                    </div>
+                    <?php foreach ($materia_stats as $ms): 
+                        $initials = substr($ms['materia'], 0, 2);
+                        $percentage = ($total_pendientes > 0) ? ($ms['total'] / $total_pendientes) * 100 : 0;
+                    ?>
+                        <div class="subject-card">
+                            <div class="subject-info">
+                                <div class="subject-initials"><?php echo $initials; ?></div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.85rem; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <?php echo $ms['materia']; ?>
+                                    </div>
+                                    <div class="progress-container">
+                                        <div class="progress-bar" style="width: <?php echo $percentage; ?>%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 800; color: var(--text-muted);"><?php echo $ms['total']; ?></div>
+                        </div>
+                    <?php endforeach; ?>
+
+                    <a href="actividades.php" class="btn-action">
+                        <i data-lucide="settings" size="18"></i> Gestionar Todo
+                    </a>
                 </div>
-                <form method="POST" enctype="multipart/form-data">
-                    <label>Archivo .csv</label>
-                    <input type="file" name="csv_file" accept=".csv" required style="background: white; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 8px;">
-                    <button type="submit" class="btn-csv">
-                        <i data-lucide="upload-cloud" size="18"></i> Cargar Tareas
-                    </button>
-                </form>
+
+                <div class="card" style="margin-top: 2rem; background: linear-gradient(135deg, #eff6ff 0%, #faf5ff 100%); border: none;">
+                    <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem;">¿Nuevo Semestre?</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Importa todas tus actividades rápidamente usando un archivo CSV.</p>
+                    <a href="actividades.php" class="btn-action" style="background: white;">
+                        <i data-lucide="file-up" size="18"></i> Subir Archivo
+                    </a>
+                </div>
             </div>
         </div>
     </div>

@@ -18,30 +18,46 @@ try {
         $descripcion = null;
     }
 
-    $query = "UPDATE tareas SET 
-                titulo = :titulo, 
-                descripcion = :descripcion, 
-                fecha_entrega = :fecha_entrega, 
-                fecha_apertura = :fecha_apertura, 
-                materia = :materia, 
-                tipo = :tipo 
-              WHERE id = :id";
+    $id = isset($data['id']) && !empty($data['id']) ? $data['id'] : null;
+
+    if ($id) {
+        $query = "UPDATE tareas SET 
+                    titulo = :titulo, 
+                    descripcion = :descripcion, 
+                    fecha_entrega = :fecha_entrega, 
+                    fecha_apertura = :fecha_apertura, 
+                    materia = :materia, 
+                    tipo = :tipo 
+                  WHERE id = :id";
+        $params = [
+            ':titulo' => trim($data['titulo']),
+            ':descripcion' => $descripcion,
+            ':fecha_entrega' => trim($data['fecha_entrega']),
+            ':fecha_apertura' => isset($data['fecha_apertura']) ? trim($data['fecha_apertura']) : null,
+            ':materia' => trim($data['materia']),
+            ':tipo' => trim($data['tipo']),
+            ':id' => $id
+        ];
+    } else {
+        $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, fecha_apertura, materia, tipo) 
+                  VALUES (:titulo, :descripcion, :fecha_entrega, :fecha_apertura, :materia, :tipo)";
+        $params = [
+            ':titulo' => trim($data['titulo']),
+            ':descripcion' => $descripcion,
+            ':fecha_entrega' => trim($data['fecha_entrega']),
+            ':fecha_apertura' => isset($data['fecha_apertura']) ? trim($data['fecha_apertura']) : null,
+            ':materia' => trim($data['materia']),
+            ':tipo' => trim($data['tipo'])
+        ];
+    }
               
     $stmt = $db->prepare($query);
-    $result = $stmt->execute([
-        ':titulo' => trim($data['titulo']),
-        ':descripcion' => $descripcion,
-        ':fecha_entrega' => trim($data['fecha_entrega']),
-        ':fecha_apertura' => isset($data['fecha_apertura']) ? trim($data['fecha_apertura']) : null,
-        ':materia' => trim($data['materia']),
-        ':tipo' => trim($data['tipo']),
-        ':id' => $data['id']
-    ]);
+    $result = $stmt->execute($params);
 
     if ($result) {
-        echo json_encode(['success' => true, 'message' => 'Tarea actualizada correctamente']);
+        echo json_encode(['success' => true, 'message' => $id ? 'Tarea actualizada correctamente' : 'Tarea creada correctamente']);
     } else {
-        echo json_encode(['success' => false, 'error' => 'No se pudo actualizar la tarea']);
+        echo json_encode(['success' => false, 'error' => 'No se pudo procesar la tarea']);
     }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);

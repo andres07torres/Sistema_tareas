@@ -136,7 +136,7 @@
 <nav class="main-nav">
     <a href="index.php" class="nav-brand">
         <i data-lucide="check-check"></i>
-        <span>Asistente UNEMI</span>
+        <span>Asistente de Tareas</span>
     </a>
 
     <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
@@ -146,16 +146,16 @@
 
     <div class="nav-links" id="navLinks">
         <a href="index.php" class="nav-link">
-            <i data-lucide="plus-circle"></i>
-            <span>Añadir Tarea</span>
-        </a>
-        <a href="vencimientos.php" class="nav-link">
             <i data-lucide="layout-dashboard"></i>
-            <span>Próximas Entregas</span>
+            <span>Panel de Control</span>
         </a>
         <a href="actividades.php" class="nav-link">
             <i data-lucide="list-todo"></i>
             <span>Gestionar Actividades</span>
+        </a>
+        <a href="vencimientos.php" class="nav-link">
+            <i data-lucide="calendar-clock"></i>
+            <span>Próximas Entregas</span>
         </a>
     </div>
 </nav>

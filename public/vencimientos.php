@@ -27,7 +27,7 @@ foreach ($tareas as $t) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vencimientos Próximos | Asistente UNEMI</title>
+    <title>Vencimientos Próximos | Asistente de Tareas</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
