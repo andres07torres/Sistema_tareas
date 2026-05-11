@@ -181,6 +181,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <tr>
                         <th style="width: 80px; text-align: center;">Bot</th>
                         <th>Información de la Actividad</th>
+                        <th class="hide-mobile">Tipo</th>
                         <th class="hide-mobile">Materia</th>
                         <th class="hide-tablet">Fechas Clave</th>
                         <th style="text-align: right; width: 80px;"></th>
@@ -189,7 +190,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <tbody>
                     <?php if (empty($tareas)): ?>
                         <tr>
-                            <td colspan="5" style="padding: 5rem; text-align: center; color: var(--text-secondary);">
+                            <td colspan="6" style="padding: 5rem; text-align: center; color: var(--text-secondary);">
                                 <i data-lucide="clipboard-x" size="56" style="margin-bottom: 1.5rem; opacity: 0.2;"></i>
                                 <p style="font-size: 1.1rem; font-weight: 500;">No hay actividades para mostrar en esta página.</p>
                             </td>
@@ -216,11 +217,13 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <td>
                                     <div class="task-title">
                                         <?php echo htmlspecialchars($t['titulo'] ?? ''); ?>
-                                        <span class="tipo-badge"><?php echo ucfirst($t['tipo']); ?></span>
                                     </div>
                                     <?php if (!empty($t['descripcion'])): ?>
                                         <div class="desc-text"><?php echo htmlspecialchars($t['descripcion'] ?? ''); ?></div>
                                     <?php endif; ?>
+                                </td>
+                                <td class="hide-mobile">
+                                    <span class="tipo-badge"><?php echo ucfirst($t['tipo']); ?></span>
                                 </td>
                                 <td class="hide-mobile">
                                     <span class="materia-badge">
