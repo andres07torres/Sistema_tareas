@@ -58,9 +58,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if (count($data) >= 7) {
                 try {
+                    // Limpiar descripción y convertir a NULL si está vacía o es 'EMPTY'
+                    $descripcion = trim($data[1]);
+                    if ($descripcion === "" || strtoupper($descripcion) === "EMPTY") {
+                        $descripcion = null;
+                    }
+
                     $stmt->execute([
                         ':titulo'         => trim($data[0]),
-                        ':descripcion'    => trim($data[1]),
+                        ':descripcion'    => $descripcion,
                         ':fecha_entrega'  => trim($data[2]),
                         ':estado'         => trim($data[3]) ?: 'pendiente',
                         ':materia'        => trim($data[4]),
@@ -87,12 +93,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // 2. FORMULARIO MANUAL
     elseif (isset($_POST['titulo'])) {
         $id = $_POST['id'] ?? null;
+        $descripcion = trim($_POST['descripcion']);
+        if ($descripcion === "" || strtoupper($descripcion) === "EMPTY") {
+            $descripcion = null;
+        }
+
         if ($id) {
             $query = "UPDATE tareas SET titulo = :titulo, descripcion = :descripcion, fecha_entrega = :fecha_entrega, 
                       fecha_apertura = :fecha_apertura, materia = :materia, tipo = :tipo WHERE id = :id";
             $params = [
                 ':titulo' => trim($_POST['titulo']),
-                ':descripcion' => trim($_POST['descripcion']),
+                ':descripcion' => $descripcion,
                 ':fecha_entrega' => trim($_POST['fecha_entrega']),
                 ':fecha_apertura' => trim($_POST['fecha_apertura']),
                 ':materia' => trim($_POST['materia']),
@@ -104,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                       VALUES (:titulo, :descripcion, :fecha_entrega, :fecha_apertura, :materia, :tipo)";
             $params = [
                 ':titulo' => trim($_POST['titulo']),
-                ':descripcion' => trim($_POST['descripcion']),
+                ':descripcion' => $descripcion,
                 ':fecha_entrega' => trim($_POST['fecha_entrega']),
                 ':fecha_apertura' => trim($_POST['fecha_apertura']),
                 ':materia' => trim($_POST['materia']),
