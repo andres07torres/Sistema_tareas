@@ -34,6 +34,19 @@
         <i data-lucide="layout-dashboard" style="width: 18px;"></i>
         Próximas Entregas
     </a>
+    <a href="actividades.php" style="
+        text-decoration: none; 
+        color: #65676b; 
+        font-weight: 600; 
+        display: flex; 
+        align-items: center; 
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        transition: color 0.2s;
+    " onmouseover="this.style.color='#0d6efd'" onmouseout="this.style.color='#65676b'">
+        <i data-lucide="list-todo" style="width: 18px;"></i>
+        Gestionar Actividades
+    </a>
 </nav>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
