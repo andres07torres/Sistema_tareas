@@ -263,10 +263,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </select>
 
                     <label>Título</label>
-                    <input type="text" name="titulo" required value="<?php echo htmlspecialchars($tarea_actual['titulo']); ?>">
+                    <input type="text" name="titulo" required value="<?php echo htmlspecialchars($tarea_actual['titulo'] ?? ''); ?>">
                     
                     <label>Descripción</label>
-                    <textarea name="descripcion" rows="3"><?php echo htmlspecialchars($tarea_actual['descripcion']); ?></textarea>
+                    <textarea name="descripcion" rows="3"><?php echo htmlspecialchars($tarea_actual['descripcion'] ?? ''); ?></textarea>
                     
                     <div style="display: flex; gap: 1rem;">
                         <div style="flex: 1;">

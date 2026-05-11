@@ -215,16 +215,16 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </td>
                                 <td>
                                     <div class="task-title">
-                                        <?php echo htmlspecialchars($t['titulo']); ?>
+                                        <?php echo htmlspecialchars($t['titulo'] ?? ''); ?>
                                         <span class="tipo-badge"><?php echo ucfirst($t['tipo']); ?></span>
                                     </div>
                                     <?php if (!empty($t['descripcion'])): ?>
-                                        <div class="desc-text"><?php echo htmlspecialchars($t['descripcion']); ?></div>
+                                        <div class="desc-text"><?php echo htmlspecialchars($t['descripcion'] ?? ''); ?></div>
                                     <?php endif; ?>
                                 </td>
                                 <td class="hide-mobile">
                                     <span class="materia-badge">
-                                        <?php echo htmlspecialchars($t['materia']); ?>
+                                        <?php echo htmlspecialchars($t['materia'] ?? ''); ?>
                                     </span>
                                 </td>
                                 <td class="hide-tablet">

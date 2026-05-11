@@ -202,10 +202,10 @@ foreach ($tareas as $t) {
                         $icon = ($t['tipo'] == 'test') ? 'graduation-cap' : 'file-text';
                     ?>
                         <div class="task-card <?php echo $cardClass; ?>">
-                            <div class="materia"><?php echo htmlspecialchars($t['materia']); ?></div>
-                            <div class="titulo"><?php echo htmlspecialchars($t['titulo']); ?></div>
+                            <div class="materia"><?php echo htmlspecialchars($t['materia'] ?? ''); ?></div>
+                            <div class="titulo"><?php echo htmlspecialchars($t['titulo'] ?? ''); ?></div>
                             <?php if (!empty($t['descripcion'])): ?>
-                                <div class="descripcion"><?php echo htmlspecialchars($t['descripcion']); ?></div>
+                                <div class="descripcion"><?php echo htmlspecialchars($t['descripcion'] ?? ''); ?></div>
                             <?php endif; ?>
                             <div class="meta">
                                 <div class="meta-item">
