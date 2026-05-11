@@ -161,6 +161,132 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         @media (max-width: 900px) { .hide-tablet { display: none; } }
         @media (max-width: 600px) { header { flex-direction: column; align-items: flex-start; gap: 1.5rem; } .search-wrapper { width: 100%; } .hide-mobile { display: none; } }
+
+        /* Estilos del Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalScale 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes modalScale {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .close-modal {
+            background: #f1f5f9;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-modal:hover {
+            background: #e2e8f0;
+            color: var(--danger-red);
+        }
+
+        .modal-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .modal-form input, .modal-form select, .modal-form textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn-save {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .btn-save:hover { filter: brightness(1.1); }
+
+        .btn-cancel {
+            background: #f1f5f9;
+            color: var(--text-secondary);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -250,10 +376,10 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <button class="actions-btn" onclick="toggleDropdown(<?php echo $t['id']; ?>)">
                                             <i data-lucide="more-horizontal" size="22"></i>
                                         </button>
-                                        <div id="dropdown-<?php echo $t['id']; ?>" class="dropdown-content">
-                                            <button onclick="window.location.href='index.php?edit=<?php echo $t['id']; ?>'">
-                                                <i data-lucide="edit-2" size="16"></i> Editar
-                                            </button>
+                                         <div id="dropdown-<?php echo $t['id']; ?>" class="dropdown-content">
+                                             <button onclick="openEditModal(<?php echo $t['id']; ?>)">
+                                                 <i data-lucide="edit-2" size="16"></i> Editar
+                                             </button>
                                             <button class="delete-btn" onclick="deleteTask(<?php echo $t['id']; ?>)">
                                                 <i data-lucide="trash-2" size="16"></i> Eliminar
                                             </button>
@@ -284,6 +410,29 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </a>
             </div>
         <?php endif; ?>
+    </div>
+
+    <!-- MODAL DE EDICIÓN -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i data-lucide="edit"></i> Editar Actividad</h2>
+                <button class="close-modal" onclick="closeModal()"><i data-lucide="x" size="20"></i></button>
+            </div>
+            <form id="editForm" class="modal-form">
+                <input type="hidden" name="id" id="editId">
+                <input type="hidden" name="tipo" id="editTipo">
+                
+                <div id="formFields">
+                    <!-- Los campos se cargarán dinámicamente aquí -->
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn-save">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -345,6 +494,121 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     setTimeout(() => location.reload(), 300);
                 }
             });
+        }
+
+        // FUNCIONES DEL MODAL
+        const modal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        const formFields = document.getElementById('formFields');
+
+        async function openEditModal(id) {
+            try {
+                const response = await fetch(`api_get_task.php?id=${id}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const task = result.data;
+                    document.getElementById('editId').value = task.id;
+                    document.getElementById('editTipo').value = task.tipo;
+                    
+                    renderForm(task);
+                    modal.style.display = 'flex';
+                    lucide.createIcons();
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        function renderForm(task) {
+            const tipo = task.tipo;
+            let fieldsHtml = '';
+
+            // Selector de Materia (Común para todos)
+            const materias = ["SISTEMAS DISTRIBUIDOS", "SISTEMA DE GESTIÓN DE LA SEGURIDAD DE LA INFORMACIÓN", "PRÁCTICAS LABORALES II", "GESTIÓN DE SISTEMAS DE CALIDAD", "FORMULACIÓN Y EVALUACIÓN DEL TRABAJO DE TITULACIÓN", "COMPUTACIÓN MÓVIL"];
+            let materiaOptions = materias.map(m => `<option value="${m}" ${task.materia === m ? 'selected' : ''}>${m}</option>`).join('');
+
+            const materiaField = `
+                <label>Materia</label>
+                <select name="materia" required>${materiaOptions}</select>
+            `;
+
+            const tituloField = `
+                <label>Título de la ${tipo.toUpperCase()}</label>
+                <input type="text" name="titulo" value="${task.titulo || ''}" required>
+            `;
+
+            const descField = `
+                <label>Descripción / Instrucciones</label>
+                <textarea name="descripcion" rows="3">${task.descripcion || ''}</textarea>
+            `;
+
+            const datesField = `
+                <div style="display: flex; gap: 1rem;">
+                    <div style="flex: 1;">
+                        <label>Fecha Apertura</label>
+                        <input type="date" name="fecha_apertura" value="${task.fecha_apertura || ''}" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Fecha Entrega</label>
+                        <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
+                    </div>
+                </div>
+            `;
+
+            if (tipo === 'tarea') {
+                fieldsHtml = materiaField + tituloField + descField + datesField;
+                document.getElementById('modalTitle').innerHTML = '<i data-lucide="file-text"></i> Editar Tarea';
+            } else if (tipo === 'foro') {
+                fieldsHtml = materiaField + tituloField + descField + datesField;
+                document.getElementById('modalTitle').innerHTML = '<i data-lucide="message-square"></i> Editar Foro';
+            } else if (tipo === 'test' || tipo === 'test') {
+                fieldsHtml = materiaField + tituloField + `
+                    <label>Fecha del Test</label>
+                    <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
+                `;
+                document.getElementById('modalTitle').innerHTML = '<i data-lucide="graduation-cap"></i> Editar Test';
+            }
+
+            formFields.innerHTML = fieldsHtml;
+        }
+
+        editForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(editForm);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('api_save_task.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    closeModal();
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        };
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            if (event.target == modal) closeModal();
+            if (!event.target.matches('.actions-btn') && !event.target.closest('.actions-btn')) {
+                document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+            }
         }
     </script>
 </body>
