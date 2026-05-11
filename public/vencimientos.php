@@ -60,20 +60,21 @@ foreach ($tareas as $t) {
         }
 
         header {
-            text-align: center;
             margin-bottom: 2rem;
+            text-align: left;
         }
 
         h1 {
             font-size: 1.75rem;
-            font-weight: 700;
-            color: #1c1e21;
-            margin-bottom: 0.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.025em;
         }
 
         .subtitle {
             color: var(--text-secondary);
             font-size: 1rem;
+            margin-top: 0.25rem;
         }
 
         .section-title {
@@ -178,8 +179,10 @@ foreach ($tareas as $t) {
     <?php include 'navbar.php'; ?>
     <div class="container">
         <header>
-            <h1>Próximas Entregas</h1>
-            <p class="subtitle">Visualización de tareas para los próximos 7 días</p>
+            <div>
+                <h1>Próximas Entregas</h1>
+                <p class="subtitle">Visualización de tareas para los próximos 7 días</p>
+            </div>
         </header>
 
         <?php if (empty($tareas)): ?>

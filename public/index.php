@@ -143,7 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         :root {
             --bg-color: #f0f2f5;
             --card-bg: #ffffff;
-            --text-primary: #1c1e21;
+            --text-primary: #0f172a;
             --text-secondary: #65676b;
             --accent-blue: #0d6efd;
             --border-color: #dddfe2;
@@ -153,6 +153,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         .container { max-width: 950px; margin: 0 auto; padding: 2rem 1rem; }
         
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+        }
+
         .form-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem; }
 
         .card { 
@@ -263,6 +271,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <?php include 'navbar.php'; ?>
     
     <div class="container">
+        <header style="margin-bottom: 2rem;">
+            <h1>Añadir Nueva Tarea</h1>
+            <p style="color: var(--text-secondary); font-size: 1rem; margin-top: 0.25rem;">Registra manualmente o importa tus actividades académicas</p>
+        </header>
         <?php echo $mensaje; ?>
 
         <div class="form-grid">
