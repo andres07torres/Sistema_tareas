@@ -9,13 +9,13 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 $offset = ($page - 1) * $limit;
 
-// Obtener total de registros para calcular páginas
+// Obtener total de registros
 $countQuery = "SELECT COUNT(*) FROM tareas";
 $totalItems = $db->query($countQuery)->fetchColumn();
 $totalPages = ceil($totalItems / $limit);
 
-// Obtener tareas con LIMIT y OFFSET
-$query = "SELECT * FROM tareas ORDER BY fecha_entrega DESC, materia ASC LIMIT :limit OFFSET :offset";
+// ORDENACIÓN: Primero por Materia, luego por Fecha de Entrega
+$query = "SELECT * FROM tareas ORDER BY materia ASC, fecha_entrega ASC LIMIT :limit OFFSET :offset";
 $stmt = $db->prepare($query);
 $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
@@ -29,6 +29,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Actividades | Asistente UNEMI</title>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #f8fafc;
@@ -64,7 +65,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         h1 {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 800;
             color: #0f172a;
             letter-spacing: -0.025em;
@@ -75,15 +76,15 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             align-items: center;
             gap: 0.75rem;
             background: white;
-            padding: 0.5rem 1rem;
+            padding: 0.6rem 1.2rem;
             border: 1px solid var(--border-color);
             border-radius: 12px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            width: 350px;
+            width: 380px;
         }
 
         .search-wrapper i { color: var(--text-secondary); flex-shrink: 0; }
-        .search-wrapper input { border: none; outline: none; width: 100%; font-size: 0.9rem; background: transparent; }
+        .search-wrapper input { border: none; outline: none; width: 100%; font-size: 0.95rem; background: transparent; font-family: inherit; }
 
         .table-container {
             background: var(--card-bg);
@@ -95,12 +96,32 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: #f1f5f9; padding: 1rem; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.05em; }
-        td { padding: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; vertical-align: middle; }
-        tr:hover td { background-color: #f8fafc; }
+        th { background: #f8fafc; padding: 1.2rem 1rem; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.05em; border-bottom: 2px solid var(--border-color); }
+        td { padding: 1.2rem 1rem; border-top: 1px solid var(--border-color); font-size: 0.95rem; vertical-align: middle; }
+        tr:hover td { background-color: #f1f5f9; }
 
-        .materia-badge { font-size: 0.7rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 4px; background: #e0f2fe; color: #0369a1; display: inline-block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .tipo-badge { font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.4rem; border-radius: 4px; background: #f1f5f9; color: #475569; }
+        .task-title {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .materia-badge { 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            padding: 0.3rem 0.6rem; 
+            border-radius: 6px; 
+            background: #eff6ff; 
+            color: #1d4ed8; 
+            display: inline-block; 
+            border: 1px solid #dbeafe;
+        }
+
+        .tipo-badge { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; background: #f1f5f9; color: #475569; text-transform: uppercase; }
 
         .status-toggle { position: relative; display: inline-block; width: 44px; height: 22px; }
         .status-toggle input { opacity: 0; width: 0; height: 0; }
@@ -109,66 +130,34 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         input:checked + .slider { background-color: var(--success-green); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        .status-label { font-size: 0.7rem; font-weight: 800; margin-top: 0.25rem; text-transform: uppercase; }
+        .status-label { font-size: 0.7rem; font-weight: 800; margin-top: 0.3rem; text-transform: uppercase; }
         .status-active { color: var(--success-green); }
         .status-inactive { color: var(--danger-red); }
 
-        .desc-text { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.25rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .desc-text { color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.3rem; line-height: 1.4; }
 
-        .date-info { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; }
-        .date-info span { display: flex; align-items: center; gap: 0.3rem; }
+        .date-info { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.85rem; }
+        .date-info span { display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary); }
+        .date-info .entrega { font-weight: 700; color: var(--text-primary); }
 
         .actions-dropdown { position: relative; display: inline-block; }
-        .actions-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.5rem; border-radius: 50%; transition: background 0.2s; }
-        .actions-btn:hover { background: #f1f5f9; color: var(--text-primary); }
-        .dropdown-content { display: none; position: absolute; right: 0; top: 100%; background-color: white; min-width: 140px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-radius: 8px; z-index: 50; border: 1px solid var(--border-color); overflow: hidden; }
-        .dropdown-content button { width: 100%; padding: 0.75rem 1rem; border: none; background: none; text-align: left; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); }
+        .actions-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.6rem; border-radius: 50%; transition: all 0.2s; }
+        .actions-btn:hover { background: #e2e8f0; color: var(--text-primary); }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 110%; background-color: white; min-width: 150px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border-radius: 10px; z-index: 50; border: 1px solid var(--border-color); overflow: hidden; }
+        .dropdown-content button { width: 100%; padding: 0.8rem 1rem; border: none; background: none; text-align: left; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 0.6rem; color: var(--text-primary); font-family: inherit; font-weight: 500; }
         .dropdown-content button:hover { background: #f8fafc; }
         .dropdown-content button.delete-btn { color: var(--danger-red); }
         .dropdown-content button.delete-btn:hover { background: #fff1f2; }
         .show { display: block; }
 
-        /* Paginación */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 2rem;
-        }
-
-        .pagination a, .pagination span {
-            padding: 0.5rem 0.9rem;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 600;
-            background: white;
-            border: 1px solid var(--border-color);
-            transition: all 0.2s;
-        }
-
-        .pagination a:hover {
-            border-color: var(--accent-blue);
-            color: var(--accent-blue);
-            background: #f0f7ff;
-        }
-
-        .pagination .active {
-            background: var(--accent-blue);
-            color: white;
-            border-color: var(--accent-blue);
-        }
-
-        .pagination .disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; }
+        .pagination a, .pagination span { padding: 0.6rem 1rem; border-radius: 10px; text-decoration: none; color: var(--text-secondary); font-size: 0.95rem; font-weight: 600; background: white; border: 1px solid var(--border-color); transition: all 0.2s; }
+        .pagination a:hover { border-color: var(--accent-blue); color: var(--accent-blue); background: #f0f9ff; }
+        .pagination .active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        .pagination .disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
         @media (max-width: 900px) { .hide-tablet { display: none; } }
-        @media (max-width: 600px) { header { flex-direction: column; align-items: flex-start; gap: 1rem; } .search-wrapper { width: 100%; } .hide-mobile { display: none; } }
+        @media (max-width: 600px) { header { flex-direction: column; align-items: flex-start; gap: 1.5rem; } .search-wrapper { width: 100%; } .hide-mobile { display: none; } }
     </style>
 </head>
 <body>
@@ -178,10 +167,10 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <header>
             <div>
                 <h1>Gestión de Actividades</h1>
-                <p style="color: var(--text-secondary); font-size: 0.9rem;">Control total de tus tareas y visibilidad del Bot</p>
+                <p style="color: var(--text-secondary); font-size: 1rem; margin-top: 0.25rem;">Organiza y controla la visibilidad de tus tareas</p>
             </div>
             <div class="search-wrapper">
-                <i data-lucide="search" size="18"></i>
+                <i data-lucide="search" size="20"></i>
                 <input type="text" id="searchInput" placeholder="Buscar actividad, materia o descripción...">
             </div>
         </header>
@@ -190,79 +179,77 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <table id="tasksTable">
                 <thead>
                     <tr>
-                        <th style="width: 70px;">Bot</th>
-                        <th>Actividad</th>
+                        <th style="width: 80px; text-align: center;">Bot</th>
+                        <th>Información de la Actividad</th>
                         <th class="hide-mobile">Materia</th>
-                        <th class="hide-tablet">Fechas (Ap./Ent.)</th>
-                        <th style="text-align: right;">Acciones</th>
+                        <th class="hide-tablet">Fechas Clave</th>
+                        <th style="text-align: right; width: 80px;"></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($tareas)): ?>
                         <tr>
-                            <td colspan="5" style="padding: 4rem; text-align: center; color: var(--text-secondary);">
-                                <i data-lucide="clipboard-x" size="48" style="margin-bottom: 1rem; opacity: 0.3;"></i>
-                                <p>No hay tareas registradas.</p>
+                            <td colspan="5" style="padding: 5rem; text-align: center; color: var(--text-secondary);">
+                                <i data-lucide="clipboard-x" size="56" style="margin-bottom: 1.5rem; opacity: 0.2;"></i>
+                                <p style="font-size: 1.1rem; font-weight: 500;">No hay actividades para mostrar en esta página.</p>
                             </td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($tareas as $t): 
                             $isActive = ($t['estado'] === 'pendiente');
                             $statusText = $isActive ? 'Activo' : 'Pasivo';
-                            $statusClass = $isActive ? 'status-active' : 'status-label status-inactive'; // Fixed class concatenation
+                            $statusClass = $isActive ? 'status-active' : 'status-inactive';
                         ?>
                             <tr data-id="<?php echo $t['id']; ?>">
-                                <td>
-                                    <div style="display: flex; flex-direction: column; align-items: center;">
+                                <td style="text-align: center;">
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem;">
                                         <label class="status-toggle">
                                             <input type="checkbox" <?php echo $isActive ? 'checked' : ''; ?> 
                                                    onchange="updateStatus(<?php echo $t['id']; ?>, this)">
                                             <span class="slider"></span>
                                         </label>
-                                        <span class="<?php echo $isActive ? 'status-active' : 'status-inactive'; ?> status-label" id="label-<?php echo $t['id']; ?>">
+                                        <span class="<?php echo $statusClass; ?> status-label" id="label-<?php echo $t['id']; ?>">
                                             <?php echo $statusText; ?>
                                         </span>
                                     </div>
                                 </td>
                                 <td>
-                                    <div style="font-weight: 700; color: #0f172a; font-size: 1rem;">
+                                    <div class="task-title">
                                         <?php echo htmlspecialchars($t['titulo']); ?>
-                                        <span class="tipo-badge" style="margin-left: 0.5rem;"><?php echo ucfirst($t['tipo']); ?></span>
+                                        <span class="tipo-badge"><?php echo ucfirst($t['tipo']); ?></span>
                                     </div>
                                     <?php if (!empty($t['descripcion'])): ?>
-                                        <div class="desc-text" title="<?php echo htmlspecialchars($t['descripcion']); ?>">
-                                            <?php echo htmlspecialchars($t['descripcion']); ?>
-                                        </div>
+                                        <div class="desc-text"><?php echo htmlspecialchars($t['descripcion']); ?></div>
                                     <?php endif; ?>
                                 </td>
                                 <td class="hide-mobile">
-                                    <span class="materia-badge" title="<?php echo htmlspecialchars($t['materia']); ?>">
+                                    <span class="materia-badge">
                                         <?php echo htmlspecialchars($t['materia']); ?>
                                     </span>
                                 </td>
                                 <td class="hide-tablet">
                                     <div class="date-info">
-                                        <span title="Fecha de Apertura">
-                                            <i data-lucide="calendar-plus" size="14" style="color: #94a3b8;"></i>
-                                            <?php echo date('d/m/Y', strtotime($t['fecha_apertura'])); ?>
+                                        <span title="Apertura">
+                                            <i data-lucide="unlock" size="14"></i>
+                                            Abre: <?php echo date('d/m/Y', strtotime($t['fecha_apertura'])); ?>
                                         </span>
-                                        <span title="Fecha de Entrega" style="font-weight: 600; color: var(--text-primary);">
-                                            <i data-lucide="calendar-check" size="14" style="color: var(--accent-blue);"></i>
-                                            <?php echo date('d/m/Y', strtotime($t['fecha_entrega'])); ?>
+                                        <span title="Cierre" class="entrega">
+                                            <i data-lucide="lock" size="14"></i>
+                                            Cierra: <?php echo date('d/m/Y', strtotime($t['fecha_entrega'])); ?>
                                         </span>
                                     </div>
                                 </td>
                                 <td style="text-align: right;">
                                     <div class="actions-dropdown">
                                         <button class="actions-btn" onclick="toggleDropdown(<?php echo $t['id']; ?>)">
-                                            <i data-lucide="more-vertical" size="20"></i>
+                                            <i data-lucide="more-horizontal" size="22"></i>
                                         </button>
                                         <div id="dropdown-<?php echo $t['id']; ?>" class="dropdown-content">
                                             <button onclick="window.location.href='index.php?edit=<?php echo $t['id']; ?>'">
-                                                <i data-lucide="edit-3" size="14"></i> Editar
+                                                <i data-lucide="edit-2" size="16"></i> Editar
                                             </button>
                                             <button class="delete-btn" onclick="deleteTask(<?php echo $t['id']; ?>)">
-                                                <i data-lucide="trash-2" size="14"></i> Eliminar
+                                                <i data-lucide="trash-2" size="16"></i> Eliminar
                                             </button>
                                         </div>
                                     </div>
@@ -274,25 +261,20 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </table>
         </div>
 
-        <!-- PAGINACIÓN -->
         <?php if ($totalPages > 1): ?>
             <div class="pagination">
                 <a href="?page=<?php echo $page - 1; ?>" class="<?php echo ($page <= 1) ? 'disabled' : ''; ?>">
-                    <i data-lucide="chevron-left" size="18"></i>
+                    <i data-lucide="chevron-left" size="20"></i>
                 </a>
-
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                     <?php if ($i == 1 || $i == $totalPages || ($i >= $page - 2 && $i <= $page + 2)): ?>
-                        <a href="?page=<?php echo $i; ?>" class="<?php echo ($page == $i) ? 'active' : ''; ?>">
-                            <?php echo $i; ?>
-                        </a>
+                        <a href="?page=<?php echo $i; ?>" class="<?php echo ($page == $i) ? 'active' : ''; ?>"><?php echo $i; ?></a>
                     <?php elseif ($i == $page - 3 || $i == $page + 3): ?>
-                        <span style="border:none; background:transparent;">...</span>
+                        <span>...</span>
                     <?php endif; ?>
                 <?php endfor; ?>
-
                 <a href="?page=<?php echo $page + 1; ?>" class="<?php echo ($page >= $totalPages) ? 'disabled' : ''; ?>">
-                    <i data-lucide="chevron-right" size="18"></i>
+                    <i data-lucide="chevron-right" size="20"></i>
                 </a>
             </div>
         <?php endif; ?>
@@ -301,13 +283,11 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script>
         lucide.createIcons();
 
-        // Buscador (Nota: El buscador ahora solo filtra lo que está en la página actual debido a la paginación del servidor)
         document.getElementById('searchInput').addEventListener('keyup', function() {
             const filter = this.value.toLowerCase();
             const rows = document.querySelectorAll('#tasksTable tbody tr');
             rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(filter) ? '' : 'none';
+                row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
             });
         });
 
@@ -328,7 +308,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             const nuevoEstado = checkbox.checked ? 'pendiente' : 'inactivo';
             const label = document.getElementById('label-' + id);
             label.textContent = checkbox.checked ? 'Activo' : 'Pasivo';
-            label.className = checkbox.checked ? 'status-active status-label' : 'status-inactive status-label';
+            label.className = (checkbox.checked ? 'status-active' : 'status-inactive') + ' status-label';
 
             fetch('api_update_status.php', {
                 method: 'POST',
@@ -339,14 +319,13 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             .then(data => {
                 if (!data.success) {
                     alert('Error: ' + data.error);
-                    checkbox.checked = !checkbox.checked;
-                    updateStatusLabels(id, checkbox.checked);
+                    location.reload();
                 }
             });
         }
 
         function deleteTask(id) {
-            if (!confirm('¿Estás seguro de que deseas eliminar esta tarea permanentemente?')) return;
+            if (!confirm('¿Seguro que deseas eliminar esta actividad?')) return;
             fetch('api_delete_task.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -357,21 +336,9 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (data.success) {
                     const row = document.querySelector(`tr[data-id="${id}"]`);
                     row.style.opacity = '0';
-                    setTimeout(() => {
-                        row.remove();
-                        // Opcional: recargar si la página queda vacía
-                        if (document.querySelectorAll('#tasksTable tbody tr').length === 0) location.reload();
-                    }, 300);
-                } else {
-                    alert('Error al eliminar: ' + data.error);
+                    setTimeout(() => location.reload(), 300);
                 }
             });
-        }
-
-        function updateStatusLabels(id, isChecked) {
-            const label = document.getElementById('label-' + id);
-            label.textContent = isChecked ? 'Activo' : 'Pasivo';
-            label.className = isChecked ? 'status-active status-label' : 'status-inactive status-label';
         }
     </script>
 </body>

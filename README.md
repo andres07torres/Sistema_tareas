@@ -9,7 +9,6 @@ Sistema automatizado para la gestión y notificación de tareas universitarias, 
 
 ## 🚀 Características Principales
 
-- **Notificaciones Automáticas**: Envío diario de tareas que vencen en los próximos 7 días mediante Cron-Jobs.
 - **Asistente Interactivo (Webhook)**: El bot responde en tiempo real a comandos:
   - `/hoy`: Muestra lo que vence en el día actual.
   - `/semana`: Resumen de las entregas de los próximos 7 días.
@@ -25,7 +24,6 @@ Sistema automatizado para la gestión y notificación de tareas universitarias, 
 - **Servidor Web:** ![Apache](https://img.shields.io/badge/-Apache-D22128?style=flat-square&logo=apache&logoColor=white)
 - **Infraestructura:** ![Docker](https://img.shields.io/badge/-Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 - **Despliegue:** ![Render](https://img.shields.io/badge/-Render-46E3B7?style=flat-square&logo=render&logoColor=white)
-- **Automatización:** ![CronJob](https://img.shields.io/badge/-Cron--Job.org-000000?style=flat-square)
 
 ## 📂 Estructura del Proyecto
 
@@ -47,7 +45,6 @@ El proyecto utiliza variables de entorno para máxima seguridad:
 - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`: Credenciales de PostgreSQL.
 - `TELEGRAM_TOKEN`: Token proporcionado por @BotFather.
 - `TELEGRAM_CHAT_ID`: ID del chat donde se recibirán las notificaciones.
-- `CRON_TOKEN`: Clave de seguridad para ejecutar el notificador externamente.
 
 ---
 Desarrollado con ❤️ para optimizar el tiempo de estudio.
