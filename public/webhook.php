@@ -110,6 +110,9 @@ try {
     require_once __DIR__ . '/../config/database.php';
     $db = (new Database())->getConnection();
 
+    // --- CIERRE AUTOMÁTICO DE TAREAS VENCIDAS ---
+    $db->exec("UPDATE tareas SET estado = 'inactivo' WHERE estado = 'pendiente' AND fecha_entrega < CURRENT_DATE");
+
     // REGISTRO AUTOMÁTICO DE SUSCRIPTOR
     registrarSuscriptor($chatId, $update, $db);
 

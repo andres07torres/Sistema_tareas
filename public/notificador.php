@@ -22,6 +22,9 @@ if (!isset($_GET['token']) || $_GET['token'] !== $token_seguridad) {
 require_once __DIR__ . '/../config/database.php';
 $db = (new Database())->getConnection();
 
+// --- CIERRE AUTOMÁTICO DE TAREAS VENCIDAS ---
+$db->exec("UPDATE tareas SET estado = 'inactivo' WHERE estado = 'pendiente' AND fecha_entrega < CURRENT_DATE");
+
 // 2. BUSCAR TAREAS PRÓXIMAS (0-7 días)
 $queryTareas = "SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
                 FROM tareas 

@@ -3,6 +3,9 @@ require_once '../config/database.php';
 
 $db = (new Database())->getConnection();
 
+// --- CIERRE AUTOMÁTICO DE TAREAS VENCIDAS ---
+$db->exec("UPDATE tareas SET estado = 'inactivo' WHERE estado = 'pendiente' AND fecha_entrega < CURRENT_DATE");
+
 // --- LÓGICA DE PAGINACIÓN ---
 $limit = 10; // Tareas por página
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
