@@ -1,50 +1,56 @@
 <nav style="
-    background: white; 
-    padding: 1rem; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+    background: #203145; 
+    padding: 1.5rem 1rem; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
     margin-bottom: 2rem; 
     display: flex; 
     justify-content: center; 
-    gap: 1.5rem;
-    border-bottom: 1px solid #dddfe2;
+    gap: 2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 ">
     <a href="index.php" style="
         text-decoration: none; 
-        color: #65676b; 
+        color: #e2e8f0; 
         font-weight: 600; 
         display: flex; 
         align-items: center; 
-        gap: 0.5rem;
-        font-size: 0.95rem;
-        transition: color 0.2s;
-    " onmouseover="this.style.color='#0d6efd'" onmouseout="this.style.color='#65676b'">
-        <i data-lucide="plus-circle" style="width: 18px;"></i>
+        gap: 0.6rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+    " onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#e2e8f0'">
+        <i data-lucide="plus-circle" style="width: 20px;"></i>
         Añadir Tarea
     </a>
     <a href="vencimientos.php" style="
         text-decoration: none; 
-        color: #65676b; 
+        color: #e2e8f0; 
         font-weight: 600; 
         display: flex; 
         align-items: center; 
-        gap: 0.5rem;
-        font-size: 0.95rem;
-        transition: color 0.2s;
-    " onmouseover="this.style.color='#0d6efd'" onmouseout="this.style.color='#65676b'">
-        <i data-lucide="layout-dashboard" style="width: 18px;"></i>
+        gap: 0.6rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+    " onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#e2e8f0'">
+        <i data-lucide="layout-dashboard" style="width: 20px;"></i>
         Próximas Entregas
     </a>
     <a href="actividades.php" style="
         text-decoration: none; 
-        color: #65676b; 
+        color: #e2e8f0; 
         font-weight: 600; 
         display: flex; 
         align-items: center; 
-        gap: 0.5rem;
-        font-size: 0.95rem;
-        transition: color 0.2s;
-    " onmouseover="this.style.color='#0d6efd'" onmouseout="this.style.color='#65676b'">
-        <i data-lucide="list-todo" style="width: 18px;"></i>
+        gap: 0.6rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+    " onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#e2e8f0'">
+        <i data-lucide="list-todo" style="width: 20px;"></i>
         Gestionar Actividades
     </a>
 </nav>
@@ -52,12 +58,12 @@
 <script>
     lucide.createIcons();
     // Resaltar link activo
-    const currentPath = window.location.pathname.split('/').pop();
+    const currentPath = window.location.pathname.split('/').pop() || 'index.php';
     document.querySelectorAll('nav a').forEach(link => {
         if (link.getAttribute('href') === currentPath) {
-            link.style.color = '#0d6efd';
-            link.style.borderBottom = '2px solid #0d6efd';
-            link.style.paddingBottom = '2px';
+            link.style.background = 'rgba(255,255,255,0.15)';
+            link.style.color = '#fff';
+            link.style.boxShadow = 'inset 0 0 0 1px rgba(255,255,255,0.2)';
         }
     });
 </script>

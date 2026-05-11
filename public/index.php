@@ -179,12 +179,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background: var(--accent-blue); 
             color: white; 
             border: none; 
-            padding: 0.8rem;
+            padding: 0.8rem 2rem;
             border-radius: 8px;
             cursor: pointer; 
             font-weight: 700; 
             font-size: 0.95rem; 
-            width: 100%;
+            display: inline-block;
+        }
+
+        .btn-danger { 
+            background: #dc3545; 
+            color: white; 
+            border: none; 
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 0.95rem; 
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
         }
 
         .btn-csv {
@@ -279,10 +299,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn-primary"><?php echo $edit_mode ? 'Actualizar' : 'Guardar'; ?></button>
-                    <?php if ($edit_mode): ?>
-                        <a href="index.php" style="display:block; text-align:center; margin-top:1rem; color:var(--text-secondary); text-decoration:none; font-size:0.9rem;">Cancelar</a>
-                    <?php endif; ?>
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary"><?php echo $edit_mode ? 'Actualizar' : 'Guardar'; ?></button>
+                        <?php if ($edit_mode): ?>
+                            <a href="actividades.php" class="btn-danger">Cancelar</a>
+                        <?php else: ?>
+                             <a href="index.php" class="btn-danger">Limpiar</a>
+                        <?php endif; ?>
+                    </div>
                 </form>
             </div>
 
