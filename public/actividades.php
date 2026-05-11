@@ -24,6 +24,11 @@ $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// FETCH MATERIAS
+$materiasStmt = $db->query("SELECT nombre FROM materias ORDER BY nombre ASC");
+$materias_db = $materiasStmt->fetchAll(PDO::FETCH_COLUMN);
+$materias_json = json_encode($materias_db);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -32,23 +37,22 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Actividades | Asistente de Tareas</title>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f8fafc;
+            --bg-color: #f0f2f5;
             --card-bg: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --accent-blue: #3b82f6;
-            --success-green: #22c55e;
-            --danger-red: #ef4444;
-            --border-color: #e2e8f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #65676b;
+            --accent-blue: #0d6efd;
+            --success-green: #198754;
+            --danger-red: #dc3545;
+            --border-color: #dddfe2;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
             line-height: 1.5;
@@ -92,16 +96,21 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .table-container {
             background: var(--card-bg);
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             overflow: visible;
             border: 1px solid var(--border-color);
             margin-bottom: 2rem;
+            transition: all 0.2s ease;
+        }
+
+        .table-container:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: #f8fafc; padding: 1.2rem 1rem; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.05em; border-bottom: 2px solid var(--border-color); }
+        th { background: #f0f2f5; padding: 1.2rem 1rem; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.05em; border-bottom: 2px solid var(--border-color); }
         td { padding: 1.2rem 1rem; border-top: 1px solid var(--border-color); font-size: 0.95rem; vertical-align: middle; }
-        tr:hover td { background-color: #f1f5f9; }
+        tr:hover td { background-color: #f0f2f5; }
 
         .task-title {
             font-weight: 700;
@@ -110,7 +119,6 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             display: flex;
             align-items: center;
             gap: 0.6rem;
-            font-family: 'Inter', sans-serif;
         }
 
         .materia-badge { 
@@ -118,18 +126,18 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             font-weight: 700; 
             padding: 0.3rem 0.6rem; 
             border-radius: 6px; 
-            background: #eff6ff; 
-            color: #1d4ed8; 
+            background: #e7f1ff; 
+            color: #0d6efd; 
             display: inline-block; 
-            border: 1px solid #dbeafe;
+            border: 1px solid #cfe2ff;
         }
 
-        .tipo-badge { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; background: #f1f5f9; color: #475569; text-transform: uppercase; }
+        .tipo-badge { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; background: #f0f2f5; color: #4b4f56; text-transform: uppercase; }
 
         .status-toggle { position: relative; display: inline-block; width: 44px; height: 22px; }
         .status-toggle input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--danger-red); transition: .4s; border-radius: 22px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--danger-red); border-radius: 22px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; }
         input:checked + .slider { background-color: var(--success-green); }
         input:checked + .slider:before { transform: translateX(22px); }
 
@@ -144,18 +152,18 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .date-info .entrega { font-weight: 700; color: var(--text-primary); }
 
         .actions-dropdown { position: relative; display: inline-block; }
-        .actions-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.6rem; border-radius: 50%; transition: all 0.2s; }
-        .actions-btn:hover { background: #e2e8f0; color: var(--text-primary); }
+        .actions-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.6rem; border-radius: 50%; }
+        .actions-btn:hover { background: #f0f2f5; color: var(--text-primary); }
         .dropdown-content { display: none; position: absolute; right: 0; top: 110%; background-color: white; min-width: 150px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border-radius: 10px; z-index: 50; border: 1px solid var(--border-color); overflow: hidden; }
         .dropdown-content button { width: 100%; padding: 0.8rem 1rem; border: none; background: none; text-align: left; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 0.6rem; color: var(--text-primary); font-family: inherit; font-weight: 500; }
-        .dropdown-content button:hover { background: #f8fafc; }
+        .dropdown-content button:hover { background: #f0f2f5; }
         .dropdown-content button.delete-btn { color: var(--danger-red); }
-        .dropdown-content button.delete-btn:hover { background: #fff1f2; }
+        .dropdown-content button.delete-btn:hover { background: #fbe7e9; }
         .show { display: block; }
 
         .pagination { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; }
-        .pagination a, .pagination span { padding: 0.6rem 1rem; border-radius: 10px; text-decoration: none; color: var(--text-secondary); font-size: 0.95rem; font-weight: 600; background: white; border: 1px solid var(--border-color); transition: all 0.2s; }
-        .pagination a:hover { border-color: var(--accent-blue); color: var(--accent-blue); background: #f0f9ff; }
+        .pagination a, .pagination span { padding: 0.6rem 1rem; border-radius: 10px; text-decoration: none; color: var(--text-secondary); font-size: 0.95rem; font-weight: 600; background: white; border: 1px solid var(--border-color); }
+        .pagination a:hover { border-color: var(--accent-blue); color: var(--accent-blue); background: #e7f1ff; }
         .pagination .active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
         .pagination .disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
@@ -184,14 +192,8 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             border-radius: 16px;
             width: 100%;
             max-width: 550px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            animation: modalScale 0.3s ease-out;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             position: relative;
-        }
-
-        @keyframes modalScale {
-            from { transform: scale(0.95); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
         }
 
         .modal-header {
@@ -214,7 +216,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .close-modal {
-            background: #f1f5f9;
+            background: #f0f2f5;
             border: none;
             color: var(--text-secondary);
             cursor: pointer;
@@ -223,7 +225,6 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
         }
 
         .close-modal:hover {
@@ -249,44 +250,55 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             margin-bottom: 1.25rem;
             font-family: inherit;
             font-size: 0.95rem;
-            transition: border-color 0.2s;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
             outline: none;
             border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
         }
 
         .modal-footer {
             display: flex;
-            justify-content: flex-end;
+            justify-content: center;
             gap: 1rem;
             margin-top: 1rem;
         }
 
         .btn-save {
-            background: var(--accent-blue);
+            background: #203145;
             color: white;
             border: none;
-            padding: 0.75rem 1.5rem;
+            padding: 0.5rem 1.2rem;
             border-radius: 8px;
             font-weight: 700;
             cursor: pointer;
-            transition: filter 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
         }
 
         .btn-save:hover { filter: brightness(1.1); }
 
         .btn-cancel {
-            background: #f1f5f9;
-            color: var(--text-secondary);
+            background: #203145;
+            color: white;
             border: none;
-            padding: 0.75rem 1.5rem;
+            padding: 0.5rem 1.2rem;
             border-radius: 8px;
             font-weight: 700;
             cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
         }
+
+        .btn-cancel:hover { filter: brightness(1.1); }
 
         .form-row {
             display: flex;
@@ -301,22 +313,23 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         .btn-add, .btn-import {
             border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
             font-weight: 700;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            gap: 0.4rem;
             cursor: pointer;
-            transition: all 0.2s;
             color: white;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
         }
 
-        .btn-add { background: var(--accent-blue); }
-        .btn-import { background: #10b981; }
+        .btn-add { background: #203145; }
+        .btn-import { background: #203145; }
 
-        .btn-add:hover, .btn-import:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-add:hover, .btn-import:hover { filter: brightness(1.1); }
 
         @media (max-width: 850px) {
             header { flex-direction: column; align-items: stretch !important; gap: 1rem; }
@@ -329,8 +342,8 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 flex-direction: column;
                 gap: 0;
             }
-            .header-actions { flex-direction: column; }
-            .header-actions button { width: 100%; }
+            .header-actions { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; }
+            .header-actions button { width: auto; flex: 1; padding: 0.5rem; font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -475,7 +488,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <h2><i data-lucide="upload-cloud"></i> Importar Actividades</h2>
                 <button class="close-modal" onclick="closeModal('importModal')"><i data-lucide="x" size="20"></i></button>
             </div>
-            <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; border: 1px dashed var(--border-color);">
+            <div style="background: #f0f2f5; padding: 1rem; border-radius: 8px; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; border: 1px dashed var(--border-color);">
                 <strong>Formato CSV:</strong><br>
                 <code>titulo, descripcion, fecha_entrega, estado, materia, tipo, fecha_apertura</code>
             </div>
@@ -543,7 +556,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             label.textContent = checkbox.checked ? 'Activo' : 'Pasivo';
             label.className = (checkbox.checked ? 'status-active' : 'status-inactive') + ' status-label';
 
-            fetch('api_update_status.php', {
+            fetch('api/api_update_status.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: id, estado: nuevoEstado })
@@ -559,7 +572,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         function deleteTask(id) {
             if (!confirm('¿Seguro que deseas eliminar esta actividad?')) return;
-            fetch('api_delete_task.php', {
+            fetch('api/api_delete_task.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: id })
@@ -591,7 +604,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         async function openEditModal(id) {
             try {
-                const response = await fetch(`api_get_task.php?id=${id}`);
+                const response = await fetch(`api/api_get_task.php?id=${id}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -630,7 +643,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             let fieldsHtml = '';
 
             // Selector de Materia (Común para todos)
-            const materias = ["SISTEMAS DISTRIBUIDOS", "SISTEMA DE GESTIÓN DE LA SEGURIDAD DE LA INFORMACIÓN", "PRÁCTICAS LABORALES II", "GESTIÓN DE SISTEMAS DE CALIDAD", "FORMULACIÓN Y EVALUACIÓN DEL TRABAJO DE TITULACIÓN", "COMPUTACIÓN MÓVIL"];
+            const materias = <?php echo $materias_json; ?>;
             let materiaOptions = materias.map(m => `<option value="${m}" ${task.materia === m ? 'selected' : ''}>${m}</option>`).join('');
 
             const materiaField = `
@@ -684,7 +697,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             const data = Object.fromEntries(formData.entries());
 
             try {
-                const response = await fetch('api_save_task.php', {
+                const response = await fetch('api/api_save_task.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -711,7 +724,7 @@ $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             const formData = new FormData(importForm);
             try {
-                const response = await fetch('api_import_csv.php', {
+                const response = await fetch('api/api_import_csv.php', {
                     method: 'POST',
                     body: formData
                 });

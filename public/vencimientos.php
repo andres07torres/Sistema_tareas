@@ -100,11 +100,12 @@ foreach ($tareas as $t) {
             padding: 1.25rem;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             border-left: 5px solid var(--accent-blue);
-            transition: box-shadow 0.2s ease;
+            transition: all 0.2s ease;
         }
 
         .task-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
 
         .task-card.urgent { border-left-color: var(--accent-urgent); }
@@ -167,6 +168,12 @@ foreach ($tareas as $t) {
             background: var(--card-bg);
             border-radius: 8px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+
+        .empty-state:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
 
         @media (max-width: 640px) {

@@ -109,9 +109,9 @@
 
         .main-nav a.nav-link {
             width: 100%;
-            padding: 1rem;
+            padding: 0.6rem 1rem;
             justify-content: flex-start;
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
     }
 
@@ -152,6 +152,10 @@
         <a href="actividades.php" class="nav-link">
             <i data-lucide="list-todo"></i>
             <span>Gestionar Actividades</span>
+        </a>
+        <a href="materias.php" class="nav-link">
+            <i data-lucide="book"></i>
+            <span>Materias</span>
         </a>
         <a href="vencimientos.php" class="nav-link">
             <i data-lucide="calendar-clock"></i>

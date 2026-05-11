@@ -22,62 +22,29 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Asistente de Tareas</title>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #3b82f6;
-            --primary-dark: #1d4ed8;
-            --accent: #8b5cf6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --bg: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --text-main: #0f172a;
-            --text-muted: #64748b;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #65676b;
+            --accent-blue: #0d6efd;
+            --success: #198754;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --border-color: #dddfe2;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body { 
-            font-family: 'Outfit', sans-serif; 
-            background: #f0f2f5;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
-            color: var(--text-main);
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
         .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-
-        /* Hero Section */
-        .hero {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            padding: 3rem 2rem;
-            border-radius: 24px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 2.5rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
-            filter: blur(40px);
-        }
-
-        .hero h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
-        .hero p { font-size: 1.1rem; opacity: 0.8; font-weight: 300; }
 
         /* Stats Grid */
         .stats-grid { 
@@ -85,25 +52,23 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
             gap: 1.5rem; 
             margin-bottom: 2.5rem;
-            animation: fadeInUp 0.8s ease-out 0.2s backwards;
         }
 
         .stat-card {
             background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            padding: 1.75rem;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: 1rem;
+            transition: all 0.2s ease;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
 
         .stat-icon {
@@ -112,27 +77,32 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
             font-size: 1.5rem;
         }
 
-        .icon-blue { background: #eff6ff; color: #3b82f6; }
-        .icon-orange { background: #fff7ed; color: #f97316; }
-        .icon-purple { background: #faf5ff; color: #a855f7; }
+        .icon-blue { background: #e7f1ff; color: #0d6efd; }
+        .icon-orange { background: #fff8e1; color: #856404; }
+        .icon-purple { background: #f3e8ff; color: #7c3aed; }
 
-        .stat-content .label { font-size: 0.875rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-        .stat-content .value { font-size: 2rem; font-weight: 800; color: var(--text-main); margin-top: 0.25rem; }
+        .stat-content .label { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-content .value { font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem; }
 
         /* Dashboard Layout */
         .main-grid { 
             display: grid; 
             grid-template-columns: 1.6fr 1fr; 
-            gap: 2rem; 
-            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+            gap: 2rem;
         }
 
         .card {
             background: var(--card-bg);
-            border-radius: 24px;
-            padding: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
 
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
@@ -141,84 +111,82 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
         /* Task List */
         .task-list { display: flex; flex-direction: column; gap: 1rem; }
         .task-item {
-            background: #f8fafc;
+            background: #f0f2f5;
             padding: 1.25rem;
-            border-radius: 16px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: all 0.2s;
             border: 1px solid transparent;
+            transition: all 0.2s ease;
         }
 
         .task-item:hover {
             background: white;
-            border-color: #e2e8f0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transform: scale(1.01);
+            border-color: var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
         }
 
         .task-info { display: flex; flex-direction: column; gap: 0.4rem; }
-        .task-title { font-weight: 700; color: var(--text-main); font-size: 1.05rem; }
-        .task-materia { font-size: 0.8rem; color: var(--primary); font-weight: 700; }
+        .task-title { font-weight: 700; color: var(--text-primary); font-size: 1.05rem; }
+        .task-materia { font-size: 0.8rem; color: var(--accent-blue); font-weight: 700; }
         
         .task-date { 
             display: flex; align-items: center; gap: 0.4rem; 
-            font-size: 0.85rem; color: var(--text-muted); 
-            background: white; padding: 0.4rem 0.75rem; border-radius: 10px;
-            border: 1px solid #f1f5f9;
+            font-size: 0.85rem; color: var(--text-secondary); 
+            background: white; padding: 0.4rem 0.75rem; border-radius: 8px;
+            border: 1px solid var(--border-color);
         }
 
         /* Subjects Section */
         .subject-card {
             background: white;
             padding: 1.25rem;
-            border-radius: 16px;
+            border-radius: 8px;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border: 1px solid #f1f5f9;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .subject-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
         }
 
         .subject-info { display: flex; align-items: center; gap: 1rem; }
         .subject-initials {
             width: 40px; height: 40px; border-radius: 10px;
-            background: #f1f5f9; color: var(--text-main);
+            background: #f0f2f5; color: var(--text-primary);
             display: flex; align-items: center; justify-content: center;
             font-weight: 800; font-size: 0.8rem;
         }
 
-        .progress-container { width: 100%; height: 6px; background: #f1f5f9; border-radius: 10px; margin-top: 0.5rem; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--primary); border-radius: 10px; transition: width 1s ease; }
+        .progress-container { width: 100%; height: 6px; background: #f0f2f5; border-radius: 10px; margin-top: 0.5rem; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--accent-blue); border-radius: 10px; }
 
         .btn-action {
-            width: 100%; padding: 1rem; margin-top: 1.5rem;
-            border: none; border-radius: 14px;
-            background: #f1f5f9; color: var(--text-main);
-            font-weight: 700; cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 0.5rem 1.2rem;
+            margin: 1.5rem auto 0;
+            border: none; border-radius: 8px;
+            background: #203145; color: white;
+            font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 0.4rem;
             text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            width: fit-content;
         }
-        .btn-action:hover { background: var(--text-main); color: white; }
-
-        /* Animations */
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .btn-action:hover { filter: brightness(1.1); }
 
         @media (max-width: 900px) {
             .main-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 600px) {
-            .hero { padding: 2rem 1.5rem; }
-            .hero h1 { font-size: 1.75rem; }
             .container { padding: 1.5rem 1rem; }
         }
     </style>
@@ -227,14 +195,6 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
     <?php include 'navbar.php'; ?>
     
     <div class="container">
-        <!-- Hero Section -->
-        <div class="hero">
-            <div style="position: relative; z-index: 2;">
-                <h1>¡Hola de nuevo!</h1>
-                <p>Tienes <strong><?php echo $total_pendientes; ?></strong> actividades pendientes en total. ¡Tú puedes!</p>
-            </div>
-        </div>
-
         <!-- Stats Overview -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -264,15 +224,15 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
             <!-- Left Column: Upcoming Tasks -->
             <div class="card">
                 <div class="card-header">
-                    <h2><i data-lucide="sparkles" style="color: #f59e0b;"></i> Próximos Desafíos</h2>
-                    <a href="actividades.php" style="font-size: 0.85rem; font-weight: 700; color: var(--primary); text-decoration: none;">Ver todo</a>
+                    <h2>Tareas Programadas</h2>
+                    <a href="actividades.php" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-blue); text-decoration: none;">Ver todo</a>
                 </div>
                 
                 <div class="task-list">
                     <?php if (empty($proximas)): ?>
                         <div style="text-align: center; padding: 3rem 0;">
                             <i data-lucide="party-popper" size="48" style="opacity: 0.2; margin-bottom: 1rem;"></i>
-                            <p style="color: var(--text-muted);">¡Excelente trabajo! No tienes tareas pendientes.</p>
+                            <p style="color: var(--text-secondary);">¡Excelente trabajo! No tienes tareas pendientes.</p>
                         </div>
                     <?php else: ?>
                         <?php foreach ($proximas as $t): 
@@ -295,7 +255,7 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
-                                    <span style="font-size: 0.65rem; font-weight: 800; background: #eff6ff; color: #3b82f6; padding: 0.3rem 0.6rem; border-radius: 6px; text-transform: uppercase;">
+                                    <span style="font-size: 0.65rem; font-weight: 800; background: #e7f1ff; color: #0d6efd; padding: 0.3rem 0.6rem; border-radius: 6px; text-transform: uppercase;">
                                         <?php echo $t['tipo']; ?>
                                     </span>
                                 </div>
@@ -309,7 +269,7 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
             <div class="side-content">
                 <div class="card">
                     <div class="card-header">
-                        <h2><i data-lucide="book-open"></i> Materias Top</h2>
+                        <h2><i data-lucide="book-open"></i> Materias</h2>
                     </div>
                     <?php foreach ($materia_stats as $ms): 
                         $initials = substr($ms['materia'], 0, 2);
@@ -327,19 +287,19 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
                                     </div>
                                 </div>
                             </div>
-                            <div style="font-weight: 800; color: var(--text-muted);"><?php echo $ms['total']; ?></div>
+                            <div style="font-weight: 800; color: var(--text-secondary);"><?php echo $ms['total']; ?></div>
                         </div>
                     <?php endforeach; ?>
 
-                    <a href="actividades.php" class="btn-action">
-                        <i data-lucide="settings" size="18"></i> Gestionar Todo
+                    <a href="materias.php" class="btn-action">
+                        <i data-lucide="settings" size="18"></i> Gestionar Materias
                     </a>
                 </div>
 
-                <div class="card" style="margin-top: 2rem; background: linear-gradient(135deg, #eff6ff 0%, #faf5ff 100%); border: none;">
+                <div class="card" style="margin-top: 2rem;">
                     <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem;">¿Nuevo Semestre?</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Importa todas tus actividades rápidamente usando un archivo CSV.</p>
-                    <a href="actividades.php" class="btn-action" style="background: white;">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Importa todas tus actividades rápidamente usando un archivo CSV.</p>
+                    <a href="actividades.php" class="btn-action">
                         <i data-lucide="file-up" size="18"></i> Subir Archivo
                     </a>
                 </div>
