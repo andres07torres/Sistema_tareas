@@ -22,6 +22,14 @@ if (!isset($_GET['token']) || $_GET['token'] !== $token_seguridad) {
 require_once __DIR__ . '/../config/database.php';
 $db = (new Database())->getConnection();
 
+// --- PREVENIR DUPLICADOS (BLOQUEO POR DÍA) ---
+$check = $db->query("SELECT id FROM control_envios WHERE fecha = CURRENT_DATE")->fetch();
+if ($check) {
+    ob_end_clean();
+    echo "Ya se envió el reporte hoy.";
+    exit;
+}
+
 // --- CIERRE AUTOMÁTICO DE TAREAS VENCIDAS ---
 $db->exec("UPDATE tareas SET estado = 'inactivo' WHERE estado = 'pendiente' AND fecha_entrega < CURRENT_DATE");
 
@@ -87,6 +95,11 @@ foreach ($suscriptores as $sub) {
     curl_close($ch);
 
     if ($res && $res['ok']) $enviados++;
+}
+
+// --- REGISTRAR ENVÍO EXITOSO ---
+if ($enviados > 0) {
+    $db->exec("INSERT INTO control_envios (fecha) VALUES (CURRENT_DATE) ON CONFLICT (fecha) DO NOTHING");
 }
 
 // RESPUESTA FINAL LIGERA PARA EL CRON-JOB
