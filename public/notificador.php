@@ -26,7 +26,11 @@ $db = (new Database())->getConnection();
 function logMsg($msg) {
     $date = date('Y-m-d H:i:s');
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'DESCONOCIDA';
-    file_put_contents(__DIR__ . '/../logs/notificador.log', "[$date] [IP: $ip] $msg\n", FILE_APPEND);
+    $logDir = __DIR__ . '/../logs';
+    if (!is_dir($logDir)) {
+        mkdir($logDir, 0777, true);
+    }
+    file_put_contents($logDir . '/notificador.log', "[$date] [IP: $ip] $msg\n", FILE_APPEND);
 }
 
 // --- PREVENIR DUPLICADOS (BLOQUEO TEMPRANO) ---
