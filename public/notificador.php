@@ -25,7 +25,8 @@ $db = (new Database())->getConnection();
 // Función de logging simple
 function logMsg($msg) {
     $date = date('Y-m-d H:i:s');
-    file_put_contents(__DIR__ . '/../logs/notificador.log', "[$date] $msg\n", FILE_APPEND);
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'DESCONOCIDA';
+    file_put_contents(__DIR__ . '/../logs/notificador.log', "[$date] [IP: $ip] $msg\n", FILE_APPEND);
 }
 
 // --- PREVENIR DUPLICADOS (BLOQUEO TEMPRANO) ---
@@ -48,6 +49,8 @@ try {
 }
 
 logMsg("Iniciando proceso de notificación...");
+$ua = $_SERVER['HTTP_USER_AGENT'] ?? 'N/A';
+logMsg("User-Agent: $ua");
 
 // --- CIERRE AUTOMÁTICO DE TAREAS VENCIDAS ---
 $db->exec("UPDATE tareas SET estado = 'inactivo' WHERE estado = 'pendiente' AND fecha_entrega < CURRENT_DATE");
