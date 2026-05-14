@@ -22,13 +22,32 @@ if (!isset($_GET['token']) || $_GET['token'] !== $token_seguridad) {
 require_once __DIR__ . '/../config/database.php';
 $db = (new Database())->getConnection();
 
-// --- PREVENIR DUPLICADOS (BLOQUEO POR DÍA) ---
-$check = $db->query("SELECT id FROM control_envios WHERE fecha = CURRENT_DATE")->fetch();
-if ($check) {
-    ob_end_clean();
-    echo "Ya se envió el reporte hoy.";
-    exit;
+// Función de logging simple
+function logMsg($msg) {
+    $date = date('Y-m-d H:i:s');
+    file_put_contents(__DIR__ . '/../logs/notificador.log', "[$date] $msg\n", FILE_APPEND);
 }
+
+// --- PREVENIR DUPLICADOS (BLOQUEO TEMPRANO) ---
+// Intentamos insertar primero para "ganar" el derecho de envío
+try {
+    $stmtLock = $db->prepare("INSERT INTO control_envios (fecha) VALUES (CURRENT_DATE) ON CONFLICT (fecha) DO NOTHING");
+    $stmtLock->execute();
+    
+    // Si no se insertó ninguna fila, significa que ya existía (conflicto ignorado)
+    if ($stmtLock->rowCount() === 0) {
+        logMsg("Intento de envío duplicado detectado. Abortando.");
+        ob_end_clean();
+        echo "Ya se envió el reporte hoy.";
+        exit;
+    }
+} catch (Exception $e) {
+    logMsg("Error al verificar/crear bloqueo de envío: " . $e->getMessage());
+    ob_end_clean();
+    die("Error interno de control.");
+}
+
+logMsg("Iniciando proceso de notificación...");
 
 // --- CIERRE AUTOMÁTICO DE TAREAS VENCIDAS ---
 $db->exec("UPDATE tareas SET estado = 'inactivo' WHERE estado = 'pendiente' AND fecha_entrega < CURRENT_DATE");
@@ -45,6 +64,7 @@ $stmt->execute();
 $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (count($tareas) === 0) {
+    logMsg("No hay tareas pendientes para hoy.");
     ob_end_clean();
     echo "No hay tareas hoy.";
     exit;
@@ -52,12 +72,6 @@ if (count($tareas) === 0) {
 
 // 3. CONSTRUIR EL MENSAJE
 $totalTareas = count($tareas);
-$appUrl = $_ENV['APP_URL'] ?? getenv('APP_URL');
-if (!$appUrl && file_exists(__DIR__ . '/../.env')) {
-    $env = parse_ini_file(__DIR__ . '/../.env');
-    $appUrl = $env['APP_URL'] ?? '';
-}
-
 $mensaje = "🔔 *REPORTE DE TAREAS* 🔔\n\n";
 $mensaje .= "Tienes *{$totalTareas}* actividades por entregar:\n";
 
@@ -76,7 +90,7 @@ foreach ($tareas as $t) {
 $mensaje .= "\n🚀 _¡A estudiar se ha dicho!_";
 
 // 4. ENVIAR A SUSCRIPTORES
-$stmtSubs = $db->prepare("SELECT chat_id FROM suscriptores");
+$stmtSubs = $db->prepare("SELECT chat_id, nombre FROM suscriptores");
 $stmtSubs->execute();
 $suscriptores = $stmtSubs->fetchAll(PDO::FETCH_ASSOC);
 
@@ -91,16 +105,24 @@ foreach ($suscriptores as $sub) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    $res = json_decode(curl_exec($ch), true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // Timeout de conexión
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);        // Timeout total
+
+    $rawResponse = curl_exec($ch);
+    $res = json_decode($rawResponse, true);
+    $error = curl_error($ch);
     curl_close($ch);
 
-    if ($res && $res['ok']) $enviados++;
+    if ($res && isset($res['ok']) && $res['ok']) {
+        $enviados++;
+        logMsg("Mensaje enviado con éxito a: {$sub['nombre']} ({$sub['chat_id']})");
+    } else {
+        $errorMsg = $res['description'] ?? $error ?? 'Error desconocido';
+        logMsg("Fallo al enviar a {$sub['nombre']} ({$sub['chat_id']}): $errorMsg");
+    }
 }
 
-// --- REGISTRAR ENVÍO EXITOSO ---
-if ($enviados > 0) {
-    $db->exec("INSERT INTO control_envios (fecha) VALUES (CURRENT_DATE) ON CONFLICT (fecha) DO NOTHING");
-}
+logMsg("Proceso finalizado. Total enviados: $enviados.");
 
 // RESPUESTA FINAL LIGERA PARA EL CRON-JOB
 ob_end_clean();
