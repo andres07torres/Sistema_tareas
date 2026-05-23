@@ -424,7 +424,7 @@ try {
             "La perseverancia es la clave que abre todas las puertas. — Anónimo"
         ];
         $frase = $frases[array_rand($frases)];
-        enviarRespuesta($chatId, $telegramToken, "🌟 *FRASE DEL DÍA*\n📅 $dia de $mes\n\n_“$frase”_\n\n💪 ¡A darle con todo!");
+        enviarRespuesta($chatId, $telegramToken, "🌟 *FRASE DEL DÍA*\n📅 {$dia} de {$mes}\n\n_{$frase}_\n\n💪 ¡A darle con todo!");
     }
 
 } catch (Exception $e) {
