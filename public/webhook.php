@@ -22,8 +22,8 @@ $telegramToken = $_ENV['TELEGRAM_TOKEN'] ?? getenv('TELEGRAM_TOKEN');
 $content = file_get_contents("php://input");
 $update = json_decode($content, true);
 
-if (!$update || !isset($update["message"])) {
-    die("Sin mensaje.");
+if (!$update || (!isset($update["message"]) && !isset($update["callback_query"]))) {
+    die("Sin mensaje ni callback.");
 }
 
 // --- FUNCIONES ---
@@ -64,6 +64,23 @@ function registrarSuscriptor($chatId, $update, $db) {
     $stmt->execute([':id' => $chatId, ':nom' => $nombre, ':tipo' => $tipo]);
 }
 
+function enviarKeyboard($chatId, $token, $mensaje, $botones) {
+    $url = "https://api.telegram.org/bot{$token}/sendMessage";
+    $data = [
+        'chat_id' => $chatId,
+        'text' => $mensaje,
+        'parse_mode' => 'Markdown',
+        'reply_markup' => json_encode(['inline_keyboard' => $botones])
+    ];
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_exec($ch);
+    curl_close($ch);
+}
+
 function formatearTexto($tareas, $titulo_seccion) {
     if (count($tareas) == 0) return "☕ No hay tareas pendientes.";
     
@@ -96,16 +113,6 @@ function formatearTexto($tareas, $titulo_seccion) {
 }
 
 // 3. EJECUCIÓN
-$chatId = $update["message"]["chat"]["id"];
-$text = trim($update["message"]["text"] ?? "");
-
-// Limpieza para grupos
-if (strpos($text, '/') === 0) {
-    $parts = explode(' ', $text);
-    $cmd = explode('@', $parts[0])[0];
-    $text = $cmd . (isset($parts[1]) ? ' ' . implode(' ', array_slice($parts, 1)) : '');
-}
-
 try {
     require_once __DIR__ . '/../config/database.php';
     $db = (new Database())->getConnection();
@@ -113,11 +120,49 @@ try {
     // --- CIERRE AUTOMÁTICO DE TAREAS VENCIDAS ---
     $db->exec("UPDATE tareas SET estado = 'inactivo' WHERE estado = 'pendiente' AND fecha_entrega < CURRENT_DATE");
 
+    // ========== CALLBACK QUERY (CLIC EN BOTÓN) ==========
+    if (isset($update["callback_query"])) {
+        $callback = $update["callback_query"];
+        $chatId = $callback["message"]["chat"]["id"];
+        $data = $callback["data"];
+
+        // Responder el callback para quitar el "cargando"
+        $url = "https://api.telegram.org/bot{$telegramToken}/answerCallbackQuery";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['callback_query_id' => $callback['id']]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_exec($ch);
+        curl_close($ch);
+
+        if (strpos($data, 'materia|') === 0) {
+            $materia = substr($data, 8);
+            $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' AND materia = :materia ORDER BY fecha_entrega ASC");
+            $stmt->execute([':materia' => $materia]);
+            $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $respuesta = formatearTexto($tareas, "📚 ACTIVIDADES DE *" . strtoupper($materia) . "*");
+            enviarRespuesta($chatId, $telegramToken, $respuesta);
+        }
+        exit;
+    }
+
+    // ========== MENSAJE DE TEXTO (COMANDOS) ==========
+    $chatId = $update["message"]["chat"]["id"];
+    $text = trim($update["message"]["text"] ?? "");
+
+    // Limpieza para grupos
+    if (strpos($text, '/') === 0) {
+        $parts = explode(' ', $text);
+        $cmd = explode('@', $parts[0])[0];
+        $text = $cmd . (isset($parts[1]) ? ' ' . implode(' ', array_slice($parts, 1)) : '');
+    }
+
     // REGISTRO AUTOMÁTICO DE SUSCRIPTOR
     registrarSuscriptor($chatId, $update, $db);
 
     if ($text == "/start" || $text == "/ayuda") {
-        enviarRespuesta($chatId, $telegramToken, "🤖 *Asistente UNEMI Activo*\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes");
+        enviarRespuesta($chatId, $telegramToken, "🤖 *Asistente UNEMI Activo*\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes\n/materias - Ver por materia");
     }
     elseif ($text == "/hoy") {
         $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC");
@@ -133,6 +178,20 @@ try {
         $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC, fecha_entrega ASC");
         $stmt->execute();
         enviarRespuesta($chatId, $telegramToken, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "📋 TODOS LOS PENDIENTES"));
+    }
+    elseif ($text == "/materias") {
+        $stmt = $db->query("SELECT DISTINCT materia FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC");
+        $materias = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($materias)) {
+            enviarRespuesta($chatId, $telegramToken, "☕ No hay materias con tareas pendientes.");
+        } else {
+            $botones = [];
+            foreach ($materias as $m) {
+                $botones[] = [['text' => "📘 $m", 'callback_data' => "materia|$m"]];
+            }
+            enviarKeyboard($chatId, $telegramToken, "📚 *SELECCIONA UNA MATERIA*\n\nElige una materia para ver sus actividades pendientes:", $botones);
+        }
     }
 
 } catch (Exception $e) {
