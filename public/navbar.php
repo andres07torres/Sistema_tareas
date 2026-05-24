@@ -1,3 +1,7 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
     /* Reset global para evitar desbordamientos */
     html, body {
@@ -6,6 +10,7 @@
         width: 100%;
         overflow-x: hidden;
         box-sizing: border-box;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     }
 
     *, *:before, *:after {

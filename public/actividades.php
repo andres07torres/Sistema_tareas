@@ -7,21 +7,36 @@ $db = (new Database())->getConnection();
 $db->exec("UPDATE tareas SET estado = 'inactivo' WHERE estado = 'pendiente' AND fecha_entrega < CURRENT_DATE");
 
 // --- LÓGICA DE PAGINACIÓN ---
-$limit = 10; // Tareas por página
+$limit = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 $offset = ($page - 1) * $limit;
 
+// --- FILTRO POR MATERIA ---
+$materiaFilter = isset($_GET['materia']) ? trim($_GET['materia']) : '';
+$whereClause = '';
+$params = [];
+
+if ($materiaFilter !== '') {
+    $whereClause = " WHERE materia = :materia";
+    $params[':materia'] = $materiaFilter;
+}
+
 // Obtener total de registros
-$countQuery = "SELECT COUNT(*) FROM tareas";
-$totalItems = $db->query($countQuery)->fetchColumn();
+$countQuery = "SELECT COUNT(*) FROM tareas" . $whereClause;
+$countStmt = $db->prepare($countQuery);
+$countStmt->execute($params);
+$totalItems = $countStmt->fetchColumn();
 $totalPages = ceil($totalItems / $limit);
 
 // ORDENACIÓN: Primero por Materia, luego por Fecha de Entrega
-$query = "SELECT * FROM tareas ORDER BY materia ASC, fecha_entrega ASC LIMIT :limit OFFSET :offset";
+$query = "SELECT * FROM tareas" . $whereClause . " ORDER BY materia ASC, fecha_entrega ASC LIMIT :limit OFFSET :offset";
 $stmt = $db->prepare($query);
 $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+foreach ($params as $key => $val) {
+    $stmt->bindValue($key, $val, PDO::PARAM_STR);
+}
 $stmt->execute();
 $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -366,11 +381,19 @@ $materias_json = json_encode($materias_db);
             </div>
         </header>
 
-        <div style="margin-bottom: 2rem;">
-            <div class="search-wrapper">
+        <div style="margin-bottom: 2rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <div class="search-wrapper" style="flex: 1; min-width: 200px;">
                 <i data-lucide="search" size="20"></i>
                 <input type="text" id="searchInput" placeholder="Buscar actividad, materia o descripción...">
             </div>
+            <select id="materiaFilter" style="padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 12px; font-size: 0.95rem; font-family: inherit; background: white; cursor: pointer; min-width: 160px;">
+                <option value="">Todas las materias</option>
+                <?php foreach ($materias_db as $m): ?>
+                    <option value="<?php echo htmlspecialchars($m); ?>" <?php echo ($materiaFilter === $m) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($m); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
         <div class="table-container">
@@ -463,18 +486,21 @@ $materias_json = json_encode($materias_db);
         </div>
 
         <?php if ($totalPages > 1): ?>
+            <?php
+                $queryParams = ($materiaFilter !== '') ? '&materia=' . urlencode($materiaFilter) : '';
+            ?>
             <div class="pagination">
-                <a href="?page=<?php echo $page - 1; ?>" class="<?php echo ($page <= 1) ? 'disabled' : ''; ?>">
+                <a href="?page=<?php echo $page - 1 . $queryParams; ?>" class="<?php echo ($page <= 1) ? 'disabled' : ''; ?>">
                     <i data-lucide="chevron-left" size="20"></i>
                 </a>
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                     <?php if ($i == 1 || $i == $totalPages || ($i >= $page - 2 && $i <= $page + 2)): ?>
-                        <a href="?page=<?php echo $i; ?>" class="<?php echo ($page == $i) ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                        <a href="?page=<?php echo $i . $queryParams; ?>" class="<?php echo ($page == $i) ? 'active' : ''; ?>"><?php echo $i; ?></a>
                     <?php elseif ($i == $page - 3 || $i == $page + 3): ?>
                         <span>...</span>
                     <?php endif; ?>
                 <?php endfor; ?>
-                <a href="?page=<?php echo $page + 1; ?>" class="<?php echo ($page >= $totalPages) ? 'disabled' : ''; ?>">
+                <a href="?page=<?php echo $page + 1 . $queryParams; ?>" class="<?php echo ($page >= $totalPages) ? 'disabled' : ''; ?>">
                     <i data-lucide="chevron-right" size="20"></i>
                 </a>
             </div>
@@ -535,6 +561,18 @@ $materias_json = json_encode($materias_db);
             rows.forEach(row => {
                 row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
             });
+        });
+
+        document.getElementById('materiaFilter').addEventListener('change', function() {
+            const materia = this.value;
+            const url = new URL(window.location.href);
+            url.searchParams.delete('page');
+            if (materia) {
+                url.searchParams.set('materia', materia);
+            } else {
+                url.searchParams.delete('materia');
+            }
+            window.location.href = url.toString();
         });
 
         function toggleDropdown(id) {
