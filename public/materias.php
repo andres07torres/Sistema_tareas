@@ -15,31 +15,10 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Materias | Asistente de Tareas</title>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="assets/css/base.css">
     <style>
-        :root {
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-primary: #1a1a1a;
-            --text-secondary: #65676b;
-            --accent-blue: #0d6efd;
-            --danger-red: #dc3545;
-            --border-color: #dddfe2;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            line-height: 1.5;
-        }
-
         .container {
             max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
         }
 
         header {

@@ -28,35 +28,10 @@ foreach ($tareas as $t) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vencimientos Próximos | Asistente de Tareas</title>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="assets/css/base.css">
     <style>
-        :root {
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-primary: #1a1a1a;
-            --text-secondary: #65676b;
-            --accent-blue: #0d6efd;
-            --accent-urgent: #dc3545;
-            --accent-warning: #ffc107;
-            --border-color: #dddfe2;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            min-height: 100vh;
-            padding: 0;
-            margin: 0;
-            line-height: 1.5;
-        }
-
         .container {
             max-width: 600px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
         }
 
         header {
