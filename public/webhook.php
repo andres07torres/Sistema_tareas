@@ -72,7 +72,7 @@ function enviarKeyboard($chatId, $token, $mensaje, $botones) {
         'chat_id' => $chatId,
         'text' => $mensaje,
         'parse_mode' => 'Markdown',
-        'reply_markup' => json_encode(['inline_keyboard' => $botones])
+        'reply_markup' => json_encode(['inline_keyboard' => $botones], JSON_UNESCAPED_UNICODE)
     ];
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_POST, 1);
@@ -154,7 +154,7 @@ try {
 
             $respuesta = formatearTexto($tareas, "📚 ACTIVIDADES DE *" . strtoupper($materia) . "*");
             if ($driveLink) {
-                $respuesta .= "\n📁 *Carpeta Drive:* {$driveLink}";
+                $respuesta .= "\n📁 *Carpeta Drive:* [Abrir enlace]({$driveLink})";
             }
             enviarRespuesta($chatId, $telegramToken, $respuesta);
         }
