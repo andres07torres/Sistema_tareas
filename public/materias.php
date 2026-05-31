@@ -107,6 +107,7 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
             width: 100%; max-width: 450px;
             max-height: 90dvh; overflow-y: auto; overflow-x: hidden;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
 
         @media (max-width: 600px) {
@@ -118,33 +119,41 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
             margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;
         }
 
-        .modal-header h2 { font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; }
+        .modal-header h2 { margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; }
 
         .close-modal {
             background: #f0f2f5; border: none; color: var(--text-secondary);
             cursor: pointer; padding: 0.5rem; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
         }
+        .close-modal:hover { background: #e2e8f0; color: var(--danger-red); }
 
         .modal-form label {
             display: block; margin-bottom: 0.5rem; font-weight: 700; font-size: 0.8rem;
-            color: var(--text-secondary); text-transform: uppercase;
+            color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.025em;
         }
 
-        .modal-form input {
+        .modal-form input, .modal-form select, .modal-form textarea {
             width: 100%; padding: 0.75rem; border: 1px solid var(--border-color);
-            border-radius: 8px; margin-bottom: 1.5rem; font-family: inherit; font-size: 0.95rem;
+            border-radius: 8px; margin-bottom: 1.25rem; font-family: inherit; font-size: 0.95rem;
         }
 
-        .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; }
+        .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
+            outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+        }
+
+        .modal-footer { display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; }
 
         .btn-save, .btn-cancel {
-            border: none; padding: 0.6rem 1.2rem; border-radius: 8px;
+            border: none; padding: 0.5rem 1.2rem; border-radius: 8px;
             font-weight: 700; cursor: pointer; font-size: 0.85rem;
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
         }
 
         .btn-save { background: #203145; color: white; }
-        .btn-cancel { background: #e2e8f0; color: var(--text-primary); }
+        .btn-save:hover { filter: brightness(1.1); }
+        .btn-cancel { background: #203145; color: white; }
+        .btn-cancel:hover { filter: brightness(1.1); }
 
         .drive-link {
             display: inline-flex;
@@ -246,7 +255,7 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <input type="url" name="drive_link" id="materiaDriveLink" autocomplete="off" placeholder="https://drive.google.com/drive/folders/...">
 
                 <div class="modal-footer">
-                    <button type="submit" class="btn-save">Guardar Materia</button>
+                    <button type="submit" class="btn-save">Guardar</button>
                     <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
                 </div>
             </form>

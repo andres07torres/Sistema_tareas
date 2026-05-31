@@ -347,10 +347,6 @@ $driveLinks_json = json_encode($driveLinks);
         }
 
         @media (max-width: 600px) {
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
             .header-actions { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; }
             .header-actions button { width: auto; flex: 1; padding: 0.5rem; font-size: 0.8rem; }
         }
@@ -553,7 +549,7 @@ $driveLinks_json = json_encode($driveLinks);
                 </div>
 
                 <div class="modal-footer">
-                    <button type="submit" class="btn-save">Guardar Cambios</button>
+                    <button type="submit" class="btn-save">Guardar</button>
                     <button type="button" class="btn-cancel" onclick="closeModal('editModal')">Cancelar</button>
                 </div>
             </form>
@@ -718,9 +714,12 @@ $driveLinks_json = json_encode($driveLinks);
                         <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
                     </div>
                 </div>
-                <div style="margin-top: 1rem;">
-                    <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                    <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
+                <div class="form-row">
+                    <div style="flex: 1;">
+                        <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
+                        <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
+                    </div>
+                    <div style="flex: 1;"></div>
                 </div>
             `;
 
@@ -732,11 +731,15 @@ $driveLinks_json = json_encode($driveLinks);
                 document.getElementById('modalTitle').innerHTML = '<i data-lucide="message-square"></i> Editar Foro';
             } else if (tipo === 'test' || tipo === 'test') {
                 fieldsHtml = materiaField + tituloField + `
-                    <label>Fecha del Test</label>
-                    <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
-                    <div style="margin-top: 1rem;">
-                        <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                        <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
+                    <div class="form-row">
+                        <div style="flex: 1;">
+                            <label>Fecha del Test</label>
+                            <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
+                            <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
+                        </div>
                     </div>
                 `;
                 document.getElementById('modalTitle').innerHTML = '<i data-lucide="graduation-cap"></i> Editar Test';
