@@ -136,7 +136,13 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .modal-form input, .modal-form select, .modal-form textarea {
             width: 100%; padding: 0.85rem 1rem; border: 1px solid var(--border-color);
             border-radius: 8px; margin-bottom: 1.75rem; font-family: inherit; font-size: 0.95rem;
+            background-color: white;
             transition: all 0.2s ease-in-out;
+        }
+
+        .modal-form input[type="date"] {
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {

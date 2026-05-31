@@ -259,7 +259,13 @@ $driveLinks_json = json_encode($driveLinks);
             margin-bottom: 1.75rem;
             font-family: inherit;
             font-size: 0.95rem;
+            background-color: white;
             transition: all 0.2s ease-in-out;
+        }
+
+        .modal-form input[type="date"] {
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
