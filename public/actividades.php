@@ -263,7 +263,7 @@ $driveLinks_json = json_encode($driveLinks);
             transition: all 0.2s ease-in-out;
         }
 
-        .modal-form input[type="date"] {
+        .modal-form .date-input {
             -webkit-appearance: none;
             appearance: none;
             position: relative;
@@ -274,9 +274,16 @@ $driveLinks_json = json_encode($driveLinks);
             background-size: 1.25rem;
             padding-right: 2.5rem;
             text-align: left;
+            height: 3.125rem;
         }
 
-        .modal-form input[type="date"]::-webkit-calendar-picker-indicator {
+        .modal-form .date-input::-webkit-date-and-time-value {
+            height: 1.25rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .modal-form .date-input::-webkit-calendar-picker-indicator {
             position: absolute;
             top: 0;
             left: 0;
@@ -286,6 +293,7 @@ $driveLinks_json = json_encode($driveLinks);
             height: 100%;
             opacity: 0;
             cursor: pointer;
+            z-index: 2;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
@@ -732,13 +740,33 @@ $driveLinks_json = json_encode($driveLinks);
 
             const datesField = `
                 <label>Fecha Apertura</label>
-                <input type="date" name="fecha_apertura" value="${task.fecha_apertura || ''}" required>
+                <input type="${task.fecha_apertura ? 'date' : 'text'}" 
+                       placeholder="dd / mm / aaaa" 
+                       class="date-input"
+                       name="fecha_apertura" 
+                       value="${task.fecha_apertura || ''}" 
+                       required 
+                       onfocus="this.type='date'" 
+                       onblur="if(!this.value)this.type='text'">
                 
                 <label>Fecha Entrega</label>
-                <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
+                <input type="${task.fecha_entrega ? 'date' : 'text'}" 
+                       placeholder="dd / mm / aaaa" 
+                       class="date-input"
+                       name="fecha_entrega" 
+                       value="${task.fecha_entrega || ''}" 
+                       required 
+                       onfocus="this.type='date'" 
+                       onblur="if(!this.value)this.type='text'">
                 
                 <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
+                <input type="${task.limite_drive ? 'date' : 'text'}" 
+                       placeholder="dd / mm / aaaa" 
+                       class="date-input"
+                       name="limite_drive" 
+                       value="${task.limite_drive || ''}" 
+                       onfocus="this.type='date'" 
+                       onblur="if(!this.value)this.type='text'">
             `;
 
             if (tipo === 'tarea') {
@@ -750,10 +778,23 @@ $driveLinks_json = json_encode($driveLinks);
             } else if (tipo === 'test' || tipo === 'test') {
                 fieldsHtml = materiaField + tituloField + `
                     <label>Fecha del Test</label>
-                    <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
+                    <input type="${task.fecha_entrega ? 'date' : 'text'}" 
+                           placeholder="dd / mm / aaaa" 
+                           class="date-input"
+                           name="fecha_entrega" 
+                           value="${task.fecha_entrega || ''}" 
+                           required 
+                           onfocus="this.type='date'" 
+                           onblur="if(!this.value)this.type='text'">
                     
                     <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                    <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
+                    <input type="${task.limite_drive ? 'date' : 'text'}" 
+                           placeholder="dd / mm / aaaa" 
+                           class="date-input"
+                           name="limite_drive" 
+                           value="${task.limite_drive || ''}" 
+                           onfocus="this.type='date'" 
+                           onblur="if(!this.value)this.type='text'">
                 `;
                 document.getElementById('modalTitle').innerHTML = '<i data-lucide="graduation-cap"></i> Editar Test';
             }

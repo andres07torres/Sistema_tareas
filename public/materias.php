@@ -140,7 +140,7 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
             transition: all 0.2s ease-in-out;
         }
 
-        .modal-form input[type="date"] {
+        .modal-form .date-input {
             -webkit-appearance: none;
             appearance: none;
             position: relative;
@@ -151,9 +151,16 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
             background-size: 1.25rem;
             padding-right: 2.5rem;
             text-align: left;
+            height: 3.125rem;
         }
 
-        .modal-form input[type="date"]::-webkit-calendar-picker-indicator {
+        .modal-form .date-input::-webkit-date-and-time-value {
+            height: 1.25rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .modal-form .date-input::-webkit-calendar-picker-indicator {
             position: absolute;
             top: 0;
             left: 0;
@@ -163,6 +170,7 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
             height: 100%;
             opacity: 0;
             cursor: pointer;
+            z-index: 2;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
