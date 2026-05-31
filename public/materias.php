@@ -129,17 +129,18 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .close-modal:hover { background: #e2e8f0; color: var(--danger-red); }
 
         .modal-form label {
-            display: block; margin-bottom: 0.5rem; font-weight: 700; font-size: 0.8rem;
+            display: block; margin-bottom: 0.65rem; font-weight: 700; font-size: 0.8rem;
             color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.025em;
         }
 
         .modal-form input, .modal-form select, .modal-form textarea {
-            width: 100%; padding: 0.75rem; border: 1px solid var(--border-color);
-            border-radius: 8px; margin-bottom: 1.25rem; font-family: inherit; font-size: 0.95rem;
+            width: 100%; padding: 0.85rem 1rem; border: 1px solid var(--border-color);
+            border-radius: 8px; margin-bottom: 1.75rem; font-family: inherit; font-size: 0.95rem;
+            transition: all 0.2s ease-in-out;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
-            outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+            outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
         }
 
         .modal-footer { display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; }

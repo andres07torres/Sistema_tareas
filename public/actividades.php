@@ -243,7 +243,7 @@ $driveLinks_json = json_encode($driveLinks);
 
         .modal-form label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.65rem;
             font-weight: 700;
             font-size: 0.8rem;
             color: var(--text-secondary);
@@ -253,18 +253,19 @@ $driveLinks_json = json_encode($driveLinks);
 
         .modal-form input, .modal-form select, .modal-form textarea {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.85rem 1rem;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.75rem;
             font-family: inherit;
             font-size: 0.95rem;
+            transition: all 0.2s ease-in-out;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
             outline: none;
             border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
         }
 
         .modal-footer {
@@ -704,23 +705,14 @@ $driveLinks_json = json_encode($driveLinks);
             `;
 
             const datesField = `
-                <div class="form-row">
-                    <div style="flex: 1;">
-                        <label>Fecha Apertura</label>
-                        <input type="date" name="fecha_apertura" value="${task.fecha_apertura || ''}" required>
-                    </div>
-                    <div style="flex: 1;">
-                        <label>Fecha Entrega</label>
-                        <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div style="flex: 1;">
-                        <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                        <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
-                    </div>
-                    <div style="flex: 1;"></div>
-                </div>
+                <label>Fecha Apertura</label>
+                <input type="date" name="fecha_apertura" value="${task.fecha_apertura || ''}" required>
+                
+                <label>Fecha Entrega</label>
+                <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
+                
+                <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
+                <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
             `;
 
             if (tipo === 'tarea') {
@@ -731,16 +723,11 @@ $driveLinks_json = json_encode($driveLinks);
                 document.getElementById('modalTitle').innerHTML = '<i data-lucide="message-square"></i> Editar Foro';
             } else if (tipo === 'test' || tipo === 'test') {
                 fieldsHtml = materiaField + tituloField + `
-                    <div class="form-row">
-                        <div style="flex: 1;">
-                            <label>Fecha del Test</label>
-                            <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
-                        </div>
-                        <div style="flex: 1;">
-                            <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                            <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
-                        </div>
-                    </div>
+                    <label>Fecha del Test</label>
+                    <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
+                    
+                    <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
+                    <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
                 `;
                 document.getElementById('modalTitle').innerHTML = '<i data-lucide="graduation-cap"></i> Editar Test';
             }
