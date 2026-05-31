@@ -59,6 +59,7 @@ $driveLinks_json = json_encode($driveLinks);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Actividades | Asistente de Tareas</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="assets/css/base.css">
     <style>
         header {

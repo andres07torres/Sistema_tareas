@@ -28,6 +28,7 @@ foreach ($tareas as $t) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vencimientos Próximos | Asistente de Tareas</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="assets/css/base.css">
     <style>
         .container {
