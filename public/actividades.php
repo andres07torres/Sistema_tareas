@@ -530,8 +530,8 @@ $driveLinks_json = json_encode($driveLinks);
                 <label>Seleccionar Archivo CSV</label>
                 <input type="file" name="csv_file" accept=".csv" required style="padding: 0.5rem; background: #fff;">
                 <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeModal('importModal')">Cancelar</button>
                     <button type="submit" class="btn-save" id="btnImportSubmit">Procesar Archivo</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal('importModal')">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -553,8 +553,8 @@ $driveLinks_json = json_encode($driveLinks);
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeModal('editModal')">Cancelar</button>
                     <button type="submit" class="btn-save">Guardar Cambios</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal('editModal')">Cancelar</button>
                 </div>
             </form>
         </div>

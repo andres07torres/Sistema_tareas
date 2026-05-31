@@ -246,8 +246,8 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <input type="url" name="drive_link" id="materiaDriveLink" autocomplete="off" placeholder="https://drive.google.com/drive/folders/...">
 
                 <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
                     <button type="submit" class="btn-save">Guardar Materia</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
                 </div>
             </form>
         </div>
