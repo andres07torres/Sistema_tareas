@@ -105,7 +105,12 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .modal-content {
             background: white; padding: 2rem; border-radius: 16px;
             width: 100%; max-width: 450px;
+            max-height: 90dvh; overflow-y: auto;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .modal-content { padding: 1.25rem; max-height: 85dvh; margin: 0.5rem; }
         }
 
         .modal-header {
