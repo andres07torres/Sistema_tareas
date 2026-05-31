@@ -41,6 +41,8 @@ function enviarRespuesta($chatId, $token, $mensaje) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
     curl_exec($ch);
     curl_close($ch);
 }
@@ -77,6 +79,8 @@ function enviarKeyboard($chatId, $token, $mensaje, $botones) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
     curl_exec($ch);
     curl_close($ch);
 }
@@ -133,6 +137,8 @@ try {
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['callback_query_id' => $callback['id']]));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         curl_exec($ch);
         curl_close($ch);
 
