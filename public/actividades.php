@@ -197,18 +197,11 @@ $driveLinks_json = json_encode($driveLinks);
             position: relative;
         }
 
-        .modal-form input[type="date"] {
-            width: auto; min-width: 150px;
-        }
-
         @media (max-width: 600px) {
             .modal-content {
                 padding: 1.25rem;
                 max-height: 85dvh;
                 margin: 0.5rem;
-            }
-            .modal-form input[type="date"] {
-                width: auto; min-width: 140px; max-width: 100%;
             }
         }
 
