@@ -197,11 +197,18 @@ $driveLinks_json = json_encode($driveLinks);
             position: relative;
         }
 
+        .modal-form input[type="date"] {
+            width: auto; min-width: 160px;
+        }
+
         @media (max-width: 600px) {
             .modal-content {
                 padding: 1.25rem;
                 max-height: 85dvh;
                 margin: 0.5rem;
+            }
+            .modal-form input[type="date"] {
+                width: 100%; min-width: 0;
             }
         }
 
@@ -718,12 +725,9 @@ $driveLinks_json = json_encode($driveLinks);
                         <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div style="flex: 1;">
-                        <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                        <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
-                    </div>
-                    <div style="flex: 1;"></div>
+                <div style="margin-top: 1rem;">
+                    <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
+                    <input type="date" name="limite_drive" value="${task.limite_drive || ''}" style="width: auto; min-width: 180px;">
                 </div>
             `;
 
@@ -737,8 +741,10 @@ $driveLinks_json = json_encode($driveLinks);
                 fieldsHtml = materiaField + tituloField + `
                     <label>Fecha del Test</label>
                     <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
-                    <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                    <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
+                    <div style="margin-top: 1rem;">
+                        <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
+                        <input type="date" name="limite_drive" value="${task.limite_drive || ''}" style="width: auto; min-width: 180px;">
+                    </div>
                 `;
                 document.getElementById('modalTitle').innerHTML = '<i data-lucide="graduation-cap"></i> Editar Test';
             }
