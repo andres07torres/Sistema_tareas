@@ -13,6 +13,9 @@ if (!isset($data['nombre']) || trim($data['nombre']) === '') {
 $nombre = trim($data['nombre']);
 $driveLink = isset($data['drive_link']) ? trim($data['drive_link']) : null;
 $driveLink = $driveLink === '' ? null : $driveLink;
+if ($driveLink !== null && !preg_match('/^https?:\/\//i', $driveLink)) {
+    $driveLink = 'https://' . $driveLink;
+}
 $id = isset($data['id']) && $data['id'] !== '' ? (int)$data['id'] : null;
 
 try {
