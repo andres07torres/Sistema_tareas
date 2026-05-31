@@ -11,15 +11,17 @@ if (!isset($data['nombre']) || trim($data['nombre']) === '') {
 }
 
 $nombre = trim($data['nombre']);
+$driveLink = isset($data['drive_link']) ? trim($data['drive_link']) : null;
+$driveLink = $driveLink === '' ? null : $driveLink;
 $id = isset($data['id']) && $data['id'] !== '' ? (int)$data['id'] : null;
 
 try {
     if ($id) {
-        $stmt = $db->prepare("UPDATE materias SET nombre = :nombre WHERE id = :id");
-        $stmt->execute([':nombre' => $nombre, ':id' => $id]);
+        $stmt = $db->prepare("UPDATE materias SET nombre = :nombre, drive_link = :drive_link WHERE id = :id");
+        $stmt->execute([':nombre' => $nombre, ':drive_link' => $driveLink, ':id' => $id]);
     } else {
-        $stmt = $db->prepare("INSERT INTO materias (nombre) VALUES (:nombre)");
-        $stmt->execute([':nombre' => $nombre]);
+        $stmt = $db->prepare("INSERT INTO materias (nombre, drive_link) VALUES (:nombre, :drive_link)");
+        $stmt->execute([':nombre' => $nombre, ':drive_link' => $driveLink]);
     }
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {

@@ -140,6 +140,22 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .btn-save { background: #203145; color: white; }
         .btn-cancel { background: #e2e8f0; color: var(--text-primary); }
 
+        .drive-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.7rem;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: filter 0.2s;
+        }
+
+        .drive-link:hover { filter: brightness(0.9); }
+
         @media (max-width: 600px) {
             header { flex-direction: column; align-items: flex-start; gap: 1rem; }
             .btn-add { width: auto; padding: 0.5rem 0.8rem; font-size: 0.8rem; }
@@ -165,13 +181,14 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <thead>
                     <tr>
                         <th>Nombre de la Materia</th>
+                        <th>Enlace Drive</th>
                         <th style="width: 120px; text-align: right;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($materias)): ?>
                         <tr>
-                            <td colspan="2" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            <td colspan="3" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
                                 No hay materias registradas.
                             </td>
                         </tr>
@@ -179,6 +196,15 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php foreach ($materias as $m): ?>
                             <tr>
                                 <td class="materia-name"><?php echo htmlspecialchars($m['nombre']); ?></td>
+                                <td>
+                                    <?php if (!empty($m['drive_link'])): ?>
+                                        <a href="<?php echo htmlspecialchars($m['drive_link']); ?>" target="_blank" class="drive-link" title="Abrir carpeta de Drive">
+                                            <i data-lucide="external-link" size="16"></i> Drive
+                                        </a>
+                                    <?php else: ?>
+                                        <span style="color: var(--text-secondary); font-size: 0.8rem;">—</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <div class="actions">
                                         <button class="btn-icon" onclick="openModal(<?php echo $m['id']; ?>)">
@@ -210,6 +236,9 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <label>Nombre de la Materia</label>
                 <input type="text" name="nombre" id="materiaNombre" required autocomplete="off" placeholder="Ej. Álgebra Lineal">
 
+                <label>Enlace Google Drive</label>
+                <input type="url" name="drive_link" id="materiaDriveLink" autocomplete="off" placeholder="https://drive.google.com/drive/folders/...">
+
                 <div class="modal-footer">
                     <button type="button" class="btn-cancel" onclick="closeModal()">Cancelar</button>
                     <button type="submit" class="btn-save">Guardar Materia</button>
@@ -236,6 +265,7 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     if (result.success) {
                         document.getElementById('materiaId').value = result.data.id;
                         document.getElementById('materiaNombre').value = result.data.nombre;
+                        document.getElementById('materiaDriveLink').value = result.data.drive_link || '';
                         document.getElementById('modalTitle').innerHTML = '<i data-lucide="edit"></i> Editar Materia';
                     } else {
                         alert(result.error);
@@ -260,7 +290,8 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
             e.preventDefault();
             const data = {
                 id: document.getElementById('materiaId').value,
-                nombre: document.getElementById('materiaNombre').value
+                nombre: document.getElementById('materiaNombre').value,
+                drive_link: document.getElementById('materiaDriveLink').value
             };
             
             try {

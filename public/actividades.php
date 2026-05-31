@@ -40,10 +40,18 @@ foreach ($params as $key => $val) {
 $stmt->execute();
 $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// FETCH MATERIAS
-$materiasStmt = $db->query("SELECT nombre FROM materias ORDER BY nombre ASC");
-$materias_db = $materiasStmt->fetchAll(PDO::FETCH_COLUMN);
+// FETCH MATERIAS with drive links
+$materiasAllStmt = $db->query("SELECT nombre, drive_link FROM materias ORDER BY nombre ASC");
+$materiasAll = $materiasAllStmt->fetchAll(PDO::FETCH_ASSOC);
+$materias_db = array_column($materiasAll, 'nombre');
 $materias_json = json_encode($materias_db);
+$driveLinks = [];
+foreach ($materiasAll as $m) {
+    if (!empty($m['drive_link'])) {
+        $driveLinks[$m['nombre']] = $m['drive_link'];
+    }
+}
+$driveLinks_json = json_encode($driveLinks);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -421,8 +429,16 @@ $materias_json = json_encode($materias_db);
                                     <span class="tipo-badge"><?php echo ucfirst($t['tipo']); ?></span>
                                 </td>
                                 <td class="hide-mobile">
-                                    <span class="materia-badge">
+                                    <span class="materia-badge" style="display: inline-flex; align-items: center; gap: 0.3rem;">
                                         <?php echo htmlspecialchars($t['materia'] ?? ''); ?>
+                                        <?php
+                                            $mat = $t['materia'] ?? '';
+                                            if ($mat && isset($driveLinks[$mat])):
+                                        ?>
+                                            <a href="<?php echo htmlspecialchars($driveLinks[$mat]); ?>" target="_blank" title="Abrir carpeta de Drive" style="color: #2e7d32;">
+                                                <i data-lucide="external-link" size="12"></i>
+                                            </a>
+                                        <?php endif; ?>
                                     </span>
                                 </td>
                                 <td class="hide-tablet">
