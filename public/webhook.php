@@ -141,18 +141,16 @@ try {
             $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' AND materia = :materia ORDER BY fecha_entrega ASC");
             $stmt->execute([':materia' => $materia]);
             $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $stmtDrive = $db->prepare("SELECT drive_link FROM materias WHERE nombre = ?");
+            $stmtDrive->execute([$materia]);
+            $driveLink = $stmtDrive->fetchColumn();
+
             $respuesta = formatearTexto($tareas, "📚 ACTIVIDADES DE *" . strtoupper($materia) . "*");
-            enviarRespuesta($chatId, $telegramToken, $respuesta);
-        } elseif (strpos($data, 'drive_link|') === 0) {
-            $materia = substr($data, 11);
-            $stmt = $db->prepare("SELECT drive_link FROM materias WHERE nombre = ?");
-            $stmt->execute([$materia]);
-            $link = $stmt->fetchColumn();
-            if ($link) {
-                enviarRespuesta($chatId, $telegramToken, "📁 *{$materia}* - Carpeta Drive\n\n{$link}");
-            } else {
-                enviarRespuesta($chatId, $telegramToken, "⚠️ No hay enlace Drive registrado para *{$materia}*.");
+            if ($driveLink) {
+                $respuesta .= "\n📁 *Carpeta Drive:* {$driveLink}";
             }
+            enviarRespuesta($chatId, $telegramToken, $respuesta);
         }
         exit;
     }
@@ -172,7 +170,7 @@ try {
     registrarSuscriptor($chatId, $update, $db);
 
     if ($text == "/start" || $text == "/ayuda") {
-        enviarRespuesta($chatId, $telegramToken, "🤖 *Asistente UNEMI Activo*\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes\n/materias - Ver por materia\n/drive - Enlace Drive de materia\n/motivacion - Frase motivacional");
+        enviarRespuesta($chatId, $telegramToken, "🤖 *Asistente UNEMI Activo*\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes\n/materias - Ver por materia\n/motivacion - Frase motivacional");
     }
     elseif ($text == "/hoy") {
         $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC");
@@ -190,52 +188,18 @@ try {
         enviarRespuesta($chatId, $telegramToken, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "📋 TODOS LOS PENDIENTES"));
     }
     elseif ($text == "/materias") {
-        $stmt = $db->query("SELECT DISTINCT materia FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC");
-        $materias = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $stmt = $db->query("SELECT nombre, drive_link FROM materias ORDER BY nombre ASC");
+        $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if (empty($materias)) {
-            enviarRespuesta($chatId, $telegramToken, "☕ No hay materias con tareas pendientes.");
+            enviarRespuesta($chatId, $telegramToken, "☕ No hay materias registradas.");
         } else {
             $botones = [];
             foreach ($materias as $m) {
-                $botones[] = [['text' => "📘 $m", 'callback_data' => "materia|$m"]];
+                $icono = !empty($m['drive_link']) ? "📁" : "📘";
+                $botones[] = [['text' => "{$icono} {$m['nombre']}", 'callback_data' => "materia|{$m['nombre']}"]];
             }
-            enviarKeyboard($chatId, $telegramToken, "📚 *SELECCIONA UNA MATERIA*\n\nElige una materia para ver sus actividades pendientes:", $botones);
-        }
-    }
-    elseif (strpos($text, "/drive") === 0) {
-        $parts = explode(' ', $text, 2);
-        $materiaBuscada = isset($parts[1]) ? trim($parts[1]) : '';
-
-        if (empty($materiaBuscada)) {
-            // Mostrar lista de materias con enlace Drive
-            $stmt = $db->query("SELECT nombre, drive_link FROM materias WHERE drive_link IS NOT NULL AND drive_link != '' ORDER BY nombre ASC");
-            $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            if (empty($materias)) {
-                enviarRespuesta($chatId, $telegramToken, "📁 No hay materias con enlace Drive registrado.\n\nUsa: `/drive NombreMateria`");
-            } else {
-                $botones = [];
-                foreach ($materias as $m) {
-                    $botones[] = [['text' => "📁 {$m['nombre']}", 'callback_data' => "drive_link|{$m['nombre']}"]];
-                }
-                enviarKeyboard($chatId, $telegramToken, "📁 *MATERIAS CON CARPETA DRIVE*\n\nSelecciona una para obtener su enlace:", $botones);
-            }
-        } else {
-            // Buscar materia específica
-            $stmt = $db->prepare("SELECT drive_link FROM materias WHERE nombre ILIKE ? AND drive_link IS NOT NULL AND drive_link != ''");
-            $stmt->execute(["%{$materiaBuscada}%"]);
-            $links = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-            if (empty($links)) {
-                enviarRespuesta($chatId, $telegramToken, "⚠️ No se encontró un enlace Drive para *{$materiaBuscada}*.");
-            } else {
-                $respuesta = "📁 *ENLACES DRIVE ENCONTRADOS*\n\n";
-                foreach ($links as $link) {
-                    $respuesta .= "🔗 {$link}\n";
-                }
-                enviarRespuesta($chatId, $telegramToken, $respuesta);
-            }
+            enviarKeyboard($chatId, $telegramToken, "📚 *SELECCIONA UNA MATERIA*\n\nElige una materia para ver sus actividades y enlace Drive:", $botones);
         }
     }
     elseif ($text == "/motivacion") {
