@@ -198,7 +198,7 @@ $driveLinks_json = json_encode($driveLinks);
         }
 
         .modal-form input[type="date"] {
-            width: auto; min-width: 160px;
+            width: auto; min-width: 150px;
         }
 
         @media (max-width: 600px) {
@@ -208,7 +208,7 @@ $driveLinks_json = json_encode($driveLinks);
                 margin: 0.5rem;
             }
             .modal-form input[type="date"] {
-                width: 100%; min-width: 0;
+                width: auto; min-width: 140px; max-width: 100%;
             }
         }
 
@@ -727,7 +727,7 @@ $driveLinks_json = json_encode($driveLinks);
                 </div>
                 <div style="margin-top: 1rem;">
                     <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                    <input type="date" name="limite_drive" value="${task.limite_drive || ''}" style="width: auto; min-width: 180px;">
+                    <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
                 </div>
             `;
 
@@ -743,7 +743,7 @@ $driveLinks_json = json_encode($driveLinks);
                     <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
                     <div style="margin-top: 1rem;">
                         <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                        <input type="date" name="limite_drive" value="${task.limite_drive || ''}" style="width: auto; min-width: 180px;">
+                        <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
                     </div>
                 `;
                 document.getElementById('modalTitle').innerHTML = '<i data-lucide="graduation-cap"></i> Editar Test';
