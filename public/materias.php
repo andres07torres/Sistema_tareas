@@ -105,7 +105,7 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .modal-content {
             background: white; padding: 2rem; border-radius: 16px;
             width: 100%; max-width: 450px;
-            max-height: 90dvh; overflow-y: auto;
+            max-height: 90dvh; overflow-y: auto; overflow-x: hidden;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
