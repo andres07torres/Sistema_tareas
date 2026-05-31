@@ -447,6 +447,12 @@ $driveLinks_json = json_encode($driveLinks);
                                             <i data-lucide="unlock" size="14"></i>
                                             Abre: <?php echo date('d/m/Y', strtotime($t['fecha_apertura'])); ?>
                                         </span>
+                                        <?php if (!empty($t['limite_drive'])): ?>
+                                        <span title="Limite Drive">
+                                            <i data-lucide="cloud" size="14"></i>
+                                            Drive: <?php echo date('d/m/Y', strtotime($t['limite_drive'])); ?>
+                                        </span>
+                                        <?php endif; ?>
                                         <span title="Cierre" class="entrega">
                                             <i data-lucide="lock" size="14"></i>
                                             Cierra: <?php echo date('d/m/Y', strtotime($t['fecha_entrega'])); ?>
@@ -506,7 +512,7 @@ $driveLinks_json = json_encode($driveLinks);
             </div>
             <div style="background: #f0f2f5; padding: 1rem; border-radius: 8px; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem; border: 1px dashed var(--border-color);">
                 <strong>Formato CSV:</strong><br>
-                <code>titulo, descripcion, fecha_entrega, estado, materia, tipo, fecha_apertura</code>
+                <code>titulo, descripcion, fecha_entrega, estado, materia, tipo, fecha_apertura, limite_drive</code>
             </div>
             <form id="importForm" class="modal-form">
                 <label>Seleccionar Archivo CSV</label>
@@ -700,6 +706,13 @@ $driveLinks_json = json_encode($driveLinks);
                         <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div style="flex: 1;">
+                        <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
+                        <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
+                    </div>
+                    <div style="flex: 1;"></div>
+                </div>
             `;
 
             if (tipo === 'tarea') {
@@ -712,6 +725,8 @@ $driveLinks_json = json_encode($driveLinks);
                 fieldsHtml = materiaField + tituloField + `
                     <label>Fecha del Test</label>
                     <input type="date" name="fecha_entrega" value="${task.fecha_entrega || ''}" required>
+                    <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
+                    <input type="date" name="limite_drive" value="${task.limite_drive || ''}">
                 `;
                 document.getElementById('modalTitle').innerHTML = '<i data-lucide="graduation-cap"></i> Editar Test';
             }

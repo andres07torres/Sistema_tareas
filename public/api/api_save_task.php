@@ -27,7 +27,8 @@ try {
                     fecha_entrega = :fecha_entrega, 
                     fecha_apertura = :fecha_apertura, 
                     materia = :materia, 
-                    tipo = :tipo 
+                    tipo = :tipo,
+                    limite_drive = :limite_drive
                   WHERE id = :id";
         $params = [
             ':titulo' => trim($data['titulo']),
@@ -36,18 +37,20 @@ try {
             ':fecha_apertura' => isset($data['fecha_apertura']) ? trim($data['fecha_apertura']) : null,
             ':materia' => trim($data['materia']),
             ':tipo' => trim($data['tipo']),
+            ':limite_drive' => isset($data['limite_drive']) && $data['limite_drive'] !== '' ? trim($data['limite_drive']) : null,
             ':id' => $id
         ];
     } else {
-        $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, fecha_apertura, materia, tipo) 
-                  VALUES (:titulo, :descripcion, :fecha_entrega, :fecha_apertura, :materia, :tipo)";
+        $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, fecha_apertura, materia, tipo, limite_drive) 
+                  VALUES (:titulo, :descripcion, :fecha_entrega, :fecha_apertura, :materia, :tipo, :limite_drive)";
         $params = [
             ':titulo' => trim($data['titulo']),
             ':descripcion' => $descripcion,
             ':fecha_entrega' => trim($data['fecha_entrega']),
             ':fecha_apertura' => isset($data['fecha_apertura']) ? trim($data['fecha_apertura']) : null,
             ':materia' => trim($data['materia']),
-            ':tipo' => trim($data['tipo'])
+            ':tipo' => trim($data['tipo']),
+            ':limite_drive' => isset($data['limite_drive']) && $data['limite_drive'] !== '' ? trim($data['limite_drive']) : null
         ];
     }
               

@@ -60,7 +60,7 @@ logMsg("User-Agent: $ua");
 $db->exec("UPDATE tareas SET estado = 'inactivo' WHERE estado = 'pendiente' AND fecha_entrega < CURRENT_DATE");
 
 // 2. BUSCAR TAREAS PRÓXIMAS (0-7 días)
-$queryTareas = "SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes 
+$queryTareas = "SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, limite_drive, (fecha_entrega - CURRENT_DATE) as dias_restantes 
                 FROM tareas 
                 WHERE estado = 'pendiente' 
                 AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7
@@ -91,6 +91,9 @@ foreach ($tareas as $t) {
     $mensaje .= "\n📘 *{$materia}*\n";
     $mensaje .= "{$icono} *{$t['titulo']}*\n";
     $mensaje .= "📅 *Inicio:* {$t['fecha_apertura']}\n";
+    if (!empty($t['limite_drive'])) {
+        $mensaje .= "⌛ *Limite Drive:* {$t['limite_drive']}\n";
+    }
     $mensaje .= "⌛ *Cierre:* {$t['fecha_entrega']} ({$plazo})\n";
 }
 

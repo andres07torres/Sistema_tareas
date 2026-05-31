@@ -111,7 +111,12 @@ function formatearTexto($tareas, $titulo_seccion) {
             else $vence = " (vence en {$dias}d)";
         }
         
-        $res .= "{$icono} *{$titulo}*\n⌛ *Cierre:* {$f_entrega}{$vence}\n";
+        $res .= "{$icono} *{$titulo}*\n";
+        $limiteDrive = $t['limite_drive'] ?? null;
+        if ($limiteDrive) {
+            $res .= "⌛ *Limite Drive:* {$limiteDrive}\n";
+        }
+        $res .= "⌛ *Cierre:* {$f_entrega}{$vence}\n";
     }
     return $res;
 }
@@ -144,7 +149,7 @@ try {
 
         if (strpos($data, 'materia|') === 0) {
             $materia = substr($data, 8);
-            $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' AND materia = :materia ORDER BY fecha_entrega ASC");
+            $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, limite_drive, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' AND materia = :materia ORDER BY fecha_entrega ASC");
             $stmt->execute([':materia' => $materia]);
             $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

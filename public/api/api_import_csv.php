@@ -29,8 +29,8 @@ try {
     $errors = [];
     $lineNum = 1;
 
-    $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, estado, materia, tipo, fecha_apertura) 
-              VALUES (:titulo, :descripcion, :fecha_entrega, :estado, :materia, :tipo, :fecha_apertura)";
+    $query = "INSERT INTO tareas (titulo, descripcion, fecha_entrega, estado, materia, tipo, fecha_apertura, limite_drive) 
+              VALUES (:titulo, :descripcion, :fecha_entrega, :estado, :materia, :tipo, :fecha_apertura, :limite_drive)";
     $stmt = $db->prepare($query);
 
     while (($data = fgetcsv($handle, 1000, $delimiter, "\"", "\\")) !== FALSE) {
@@ -51,7 +51,8 @@ try {
                     ':estado'         => trim($data[3]) ?: 'pendiente',
                     ':materia'        => trim($data[4]),
                     ':tipo'           => trim($data[5]),
-                    ':fecha_apertura' => trim($data[6])
+                    ':fecha_apertura' => trim($data[6]),
+                    ':limite_drive'   => isset($data[7]) && trim($data[7]) !== '' ? trim($data[7]) : null
                 ]);
                 $count++;
             } catch (Exception $e) {
