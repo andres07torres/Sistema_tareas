@@ -32,6 +32,10 @@
             <i data-lucide="calendar-clock"></i>
             <span>Próximas Entregas</span>
         </a>
+        <a href="drive_docs.php" class="nav-link">
+            <i data-lucide="hard-drive"></i>
+            <span>Documentos Drive</span>
+        </a>
     </div>
 </nav>
 

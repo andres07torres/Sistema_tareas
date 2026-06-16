@@ -96,7 +96,8 @@ foreach ($materias as $materia) {
         $nombre = $archivo['name'];
         $mimeType = $archivo['mimeType'];
         $tipo = obtenerTipoDocumento($mimeType);
-        $enlace = "https://drive.google.com/file/d/{$archivoId}/view";
+        $folderParent = $archivo['parentFolder'] ?? $folderId;
+        $enlace = "https://drive.google.com/drive/folders/{$folderParent}";
         $creadoEn = $archivo['createdTime'] ?? date('c');
 
         // Verificar si ya existe registrado
@@ -248,6 +249,7 @@ function listarArchivosRecursivo($accessToken, $folderId, $maxDepth = -1) {
                     } elseif (strpos($file['mimeType'], 'application/pdf') === 0 ||
                               $file['mimeType'] === 'application/msword' ||
                               $file['mimeType'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                        $file['parentFolder'] = $currentFolder;
                         $allFiles[] = $file;
                     }
                 }
@@ -271,10 +273,10 @@ function obtenerTipoDocumento($mimeType) {
 
 function enviarNotificacion($db, $telegramToken, $materiaNombre, $docNombre, $tipo, $enlace) {
     $icono = ($tipo === 'PDF') ? '📄' : '📝';
-    $mensaje = "📁 *NUEVO DOCUMENTO EN DRIVE* 📁\n\n";
-    $mensaje .= "📘 *Materia:* {$materiaNombre}\n";
+    $mensaje = "📁 ACTIVIDADES CARGADAS EN DRIVE 📁\n\n";
+    $mensaje .= "📘 Materia: {$materiaNombre}\n";
     $mensaje .= "🔗 [Abrir en Drive]({$enlace})\n\n";
-    $mensaje .= "💡 _Revisa el material disponible._";
+    $mensaje .= "💡 Revisa el material disponible";
 
     $stmt = $db->query("SELECT chat_id FROM suscriptores");
     $suscriptores = $stmt->fetchAll(PDO::FETCH_ASSOC);
