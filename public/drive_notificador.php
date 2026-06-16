@@ -83,7 +83,7 @@ foreach ($materias as $materia) {
 
     logMsg("Escaneando: {$materia['nombre']} (folder: $folderId)");
 
-    $archivos = listarArchivosRecursivo($accessToken, $folderId);
+    $archivos = listarArchivosRecursivo($accessToken, $folderId, 1);
     if ($archivos === false) {
         logMsg("Error al listar archivos de: {$materia['nombre']}");
         continue;
@@ -196,18 +196,19 @@ function extraerFolderId($url) {
     return null;
 }
 
-function listarArchivosRecursivo($accessToken, $folderId) {
+function listarArchivosRecursivo($accessToken, $folderId, $maxDepth = -1) {
     $allFiles = [];
 
-    $subfolders = [$folderId];
+    $queue = [['id' => $folderId, 'depth' => 0]];
     $visited = [];
 
-    while (!empty($subfolders)) {
-        $currentFolder = array_shift($subfolders);
+    while (!empty($queue)) {
+        $item = array_shift($queue);
+        $currentFolder = $item['id'];
+        $depth = $item['depth'];
+
         if (in_array($currentFolder, $visited)) continue;
         $visited[] = $currentFolder;
-
-        $mimeFilter = "mimeType='application/pdf' or mimeType='application/msword' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document'";
 
         $pageToken = null;
         do {
@@ -241,7 +242,9 @@ function listarArchivosRecursivo($accessToken, $folderId) {
             if (isset($data['files'])) {
                 foreach ($data['files'] as $file) {
                     if ($file['mimeType'] === 'application/vnd.google-apps.folder') {
-                        $subfolders[] = $file['id'];
+                        if ($maxDepth === -1 || $depth < $maxDepth) {
+                            $queue[] = ['id' => $file['id'], 'depth' => $depth + 1];
+                        }
                     } elseif (strpos($file['mimeType'], 'application/pdf') === 0 ||
                               $file['mimeType'] === 'application/msword' ||
                               $file['mimeType'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
