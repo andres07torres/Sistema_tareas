@@ -83,7 +83,7 @@ foreach ($materias as $materia) {
 
     logMsg("Escaneando: {$materia['nombre']} (folder: $folderId)");
 
-    $archivos = listarArchivosDrive($accessToken, $folderId);
+    $archivos = listarArchivosRecursivo($accessToken, $folderId);
     if ($archivos === false) {
         logMsg("Error al listar archivos de: {$materia['nombre']}");
         continue;
@@ -196,48 +196,63 @@ function extraerFolderId($url) {
     return null;
 }
 
-function listarArchivosDrive($accessToken, $folderId) {
+function listarArchivosRecursivo($accessToken, $folderId) {
     $allFiles = [];
-    $pageToken = null;
 
-    $mimeFilter = "mimeType='application/pdf' or mimeType='application/msword' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document'";
+    $subfolders = [$folderId];
+    $visited = [];
 
-    do {
-        $params = [
-            'q' => "'$folderId' in parents and ($mimeFilter) and trashed=false",
-            'fields' => 'files(id,name,mimeType,createdTime),nextPageToken',
-            'pageSize' => 100,
-        ];
-        if ($pageToken) {
-            $params['pageToken'] = $pageToken;
-        }
+    while (!empty($subfolders)) {
+        $currentFolder = array_shift($subfolders);
+        if (in_array($currentFolder, $visited)) continue;
+        $visited[] = $currentFolder;
 
-        $url = 'https://www.googleapis.com/drive/v3/files?' . http_build_query($params);
+        $mimeFilter = "mimeType='application/pdf' or mimeType='application/msword' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document'";
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $accessToken]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        $pageToken = null;
+        do {
+            $params = [
+                'q' => "'$currentFolder' in parents and trashed=false",
+                'fields' => 'files(id,name,mimeType,createdTime),nextPageToken',
+                'pageSize' => 100,
+            ];
+            if ($pageToken) $params['pageToken'] = $pageToken;
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
+            $url = 'https://www.googleapis.com/drive/v3/files?' . http_build_query($params);
 
-        if ($httpCode !== 200) {
-            logMsg("Error Drive API: HTTP $httpCode - " . ($response ?: $error));
-            return false;
-        }
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $accessToken]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
 
-        $data = json_decode($response, true);
-        if (isset($data['files'])) {
-            $allFiles = array_merge($allFiles, $data['files']);
-        }
-        $pageToken = $data['nextPageToken'] ?? null;
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
 
-    } while ($pageToken);
+            if ($httpCode !== 200) {
+                logMsg("Error Drive API folder $currentFolder: HTTP $httpCode - " . ($response ?: $error));
+                return false;
+            }
+
+            $data = json_decode($response, true);
+
+            if (isset($data['files'])) {
+                foreach ($data['files'] as $file) {
+                    if ($file['mimeType'] === 'application/vnd.google-apps.folder') {
+                        $subfolders[] = $file['id'];
+                    } elseif (strpos($file['mimeType'], 'application/pdf') === 0 ||
+                              $file['mimeType'] === 'application/msword' ||
+                              $file['mimeType'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                        $allFiles[] = $file;
+                    }
+                }
+            }
+
+            $pageToken = $data['nextPageToken'] ?? null;
+        } while ($pageToken);
+    }
 
     return $allFiles;
 }
