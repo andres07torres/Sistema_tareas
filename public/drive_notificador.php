@@ -74,6 +74,9 @@ logMsg("Materias con Drive: " . count($materias));
 $totalNuevos = 0;
 $totalNotificados = 0;
 
+// Primera pasada: recolectar archivos nuevos por materia
+$materiasNuevos = [];
+
 foreach ($materias as $materia) {
     $folderId = extraerFolderId($materia['drive_link']);
     if (!$folderId) {
@@ -91,111 +94,94 @@ foreach ($materias as $materia) {
 
     logMsg("  Archivos encontrados: " . count($archivos));
 
-    // Separar archivos nuevos de los ya registrados
     $nuevos = [];
-    $idsExistentes = [];
 
     foreach ($archivos as $archivo) {
         $check = $db->prepare("SELECT id FROM documentos_drive WHERE materia_id = :mid AND archivo_id = :aid");
         $check->execute([':mid' => $materia['id'], ':aid' => $archivo['id']]);
-        if ($check->fetch()) {
-            $idsExistentes[] = $archivo['id'];
-        } else {
+        if (!$check->fetch()) {
             $nuevos[] = $archivo;
         }
     }
 
-    // Agrupar nuevos por carpeta padre
+    if (empty($nuevos)) {
+        logMsg("  Sin documentos nuevos.");
+        continue;
+    }
+
+    // Agrupar por carpeta padre
     $porCarpeta = [];
     foreach ($nuevos as $archivo) {
         $parent = $archivo['parentFolder'] ?? $folderId;
         $porCarpeta[$parent][] = $archivo;
     }
 
-    // Determinar qué notificar según la regla: si hay Word en la carpeta, solo Word; si no, PDF
-    $aNotificar = [];
-    foreach ($porCarpeta as $parent => $archivosCarpeta) {
-        $tieneWord = false;
-        foreach ($archivosCarpeta as $a) {
-            if ($a['mimeType'] === 'application/msword' || $a['mimeType'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-                $tieneWord = true;
-                break;
-            }
-        }
-        foreach ($archivosCarpeta as $a) {
-            if ($tieneWord) {
-                if ($a['mimeType'] === 'application/msword' || $a['mimeType'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-                    $aNotificar[] = $a;
-                }
-            } else {
-                $aNotificar[] = $a;
-            }
-        }
-    }
+    $materiasNuevos[] = [
+        'id' => $materia['id'],
+        'nombre' => $materia['nombre'],
+        'folderId' => $folderId,
+        'nuevos' => $nuevos,
+        'porCarpeta' => $porCarpeta,
+    ];
+}
 
-    foreach ($archivos as $archivo) {
-        $archivoId = $archivo['id'];
+// Segunda pasada: insertar en BD y notificar agrupado por materia
+foreach ($materiasNuevos as $data) {
+    $totalNuevos += count($data['nuevos']);
 
-        // Si ya existe en BD, saltar
-        if (in_array($archivoId, $idsExistentes)) {
-            continue;
-        }
-
-        $nombre = $archivo['name'];
-        $mimeType = $archivo['mimeType'];
-        $tipo = obtenerTipoDocumento($mimeType);
-        $folderParent = $archivo['parentFolder'] ?? $folderId;
+    // Insertar todos los nuevos en BD
+    foreach ($data['nuevos'] as $archivo) {
+        $tipo = obtenerTipoDocumento($archivo['mimeType']);
+        $folderParent = $archivo['parentFolder'] ?? $data['folderId'];
         $enlace = "https://drive.google.com/drive/folders/{$folderParent}";
-        $creadoEn = $archivo['createdTime'] ?? date('c');
 
-        // Insertar nuevo documento (siempre se registra)
         $insert = $db->prepare("INSERT INTO documentos_drive (materia_id, archivo_id, nombre, tipo, enlace, detectado_en, notificado)
                                 VALUES (:mid, :aid, :nom, :tip, :enl, NOW(), FALSE)");
         $insert->execute([
-            ':mid' => $materia['id'],
-            ':aid' => $archivoId,
-            ':nom' => $nombre,
+            ':mid' => $data['id'],
+            ':aid' => $archivo['id'],
+            ':nom' => $archivo['name'],
             ':tip' => $tipo,
             ':enl' => $enlace,
         ]);
 
-        $totalNuevos++;
-        logMsg("  Nuevo documento: $nombre ($tipo) - {$materia['nombre']}");
+        logMsg("  Nuevo: {$archivo['name']} ($tipo) - {$data['nombre']}");
+    }
 
-        // Verificar si este archivo debe ser notificado según la regla
-        $debeNotificar = false;
-        foreach ($aNotificar as $n) {
-            if ($n['id'] === $archivoId) {
-                $debeNotificar = true;
-                break;
-            }
+    // Construir un solo mensaje con todas las carpetas
+    $mensaje = "📁 ACTIVIDADES CARGADAS EN DRIVE 📁\n\n";
+    $mensaje .= "📘 Materia: {$data['nombre']}\n";
+
+    foreach ($data['porCarpeta'] as $parent => $archivosCarpeta) {
+        $nombreCarpeta = $parent;
+        $ch = curl_init("https://www.googleapis.com/drive/v3/files/{$parent}?fields=name");
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $accessToken]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        $res = curl_exec($ch);
+        $folderData = json_decode($res, true);
+        if (isset($folderData['name'])) {
+            $nombreCarpeta = $folderData['name'];
         }
 
-        if (!$debeNotificar) {
-            // Marcar como notificado sin enviar (PDF ignorado porque hay Word en la misma carpeta)
+        $enlaceCarpeta = "https://drive.google.com/drive/folders/{$parent}";
+        $mensaje .= "\n📂 {$nombreCarpeta}\n";
+        $mensaje .= "🔗 [Abrir carpeta]({$enlaceCarpeta})\n";
+    }
+
+    $mensaje .= "\n💡 Revisa el material disponible";
+
+    // Enviar una sola notificación por materia
+    if (enviarMensaje($db, $telegramToken, $mensaje)) {
+        foreach ($data['nuevos'] as $archivo) {
             $db->prepare("UPDATE documentos_drive SET notificado = TRUE WHERE materia_id = :mid AND archivo_id = :aid")
-               ->execute([':mid' => $materia['id'], ':aid' => $archivoId]);
-            logMsg("  Omitido (hay Word en la misma carpeta): $nombre");
-            continue;
+               ->execute([':mid' => $data['id'], ':aid' => $archivo['id']]);
         }
-
-        // Notificar si fue creado en los últimos 3 días
-        $creadoTimestamp = strtotime($creadoEn);
-        $limite = strtotime('-3 days');
-        if ($creadoTimestamp >= $limite) {
-            if (enviarNotificacion($db, $telegramToken, $materia['nombre'], $nombre, $tipo, $enlace)) {
-                $db->prepare("UPDATE documentos_drive SET notificado = TRUE WHERE materia_id = :mid AND archivo_id = :aid")
-                   ->execute([':mid' => $materia['id'], ':aid' => $archivoId]);
-                $totalNotificados++;
-                logMsg("  Notificación enviada para: $nombre");
-            } else {
-                logMsg("  Fallo notificación para: $nombre");
-            }
-        } else {
-            $db->prepare("UPDATE documentos_drive SET notificado = TRUE WHERE materia_id = :mid AND archivo_id = :aid")
-               ->execute([':mid' => $materia['id'], ':aid' => $archivoId]);
-            logMsg("  Omitido (archivo viejo): $nombre ({$creadoEn})");
-        }
+        $totalNotificados += count($data['nuevos']);
+        logMsg("  Notificación enviada para: {$data['nombre']} ({$totalNotificados} archivos)");
+    } else {
+        logMsg("  Fallo notificación para: {$data['nombre']}");
     }
 }
 
@@ -326,13 +312,7 @@ function obtenerTipoDocumento($mimeType) {
     return $map[$mimeType] ?? 'OTRO';
 }
 
-function enviarNotificacion($db, $telegramToken, $materiaNombre, $docNombre, $tipo, $enlace) {
-    $icono = ($tipo === 'PDF') ? '📄' : '📝';
-    $mensaje = "📁 ACTIVIDADES CARGADAS EN DRIVE 📁\n\n";
-    $mensaje .= "📘 Materia: {$materiaNombre}\n";
-    $mensaje .= "🔗 [Abrir en Drive]({$enlace})\n\n";
-    $mensaje .= "💡 Revisa el material disponible";
-
+function enviarMensaje($db, $telegramToken, $mensaje) {
     $stmt = $db->query("SELECT chat_id FROM suscriptores");
     $suscriptores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -357,7 +337,6 @@ function enviarNotificacion($db, $telegramToken, $materiaNombre, $docNombre, $ti
         $raw = curl_exec($ch);
         $res = json_decode($raw, true);
         $err = curl_error($ch);
-        curl_close($ch);
 
         if ($res && isset($res['ok']) && $res['ok']) {
             $exitos++;
