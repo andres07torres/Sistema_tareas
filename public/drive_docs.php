@@ -83,7 +83,8 @@ $documentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             border-radius: 12px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border-color);
-            overflow: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -189,7 +190,11 @@ $documentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         @media (max-width: 768px) {
             header { flex-direction: column; align-items: stretch; }
             .search-bar { max-width: 100%; }
-            th, td { padding: 0.8rem 0.6rem; font-size: 0.85rem; }
+            th, td { padding: 0.7rem 0.5rem; font-size: 0.8rem; }
+            .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+            .stat-box { padding: 0.8rem; }
+            .stat-box .num { font-size: 1.1rem; }
+            .materia-badge { font-size: 0.65rem; padding: 0.2rem 0.4rem; }
         }
     </style>
 </head>
