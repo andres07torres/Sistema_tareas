@@ -153,6 +153,16 @@ foreach ($materiasNuevos as $data) {
     $mensaje .= "📘 Materia: {$data['nombre']}\n";
 
     foreach ($data['porCarpeta'] as $parent => $archivosCarpeta) {
+        // Preferir Word sobre PDF: si hay Word, solo mostrar Word; mostrar todo si solo hay PDF
+        $tieneWord = false;
+        foreach ($archivosCarpeta as $a) {
+            $m = $a['mimeType'];
+            if ($m === 'application/msword' || $m === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                $tieneWord = true;
+                break;
+            }
+        }
+
         $nombreCarpeta = $parent;
         $ch = curl_init("https://www.googleapis.com/drive/v3/files/{$parent}?fields=name");
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $accessToken]);
@@ -168,6 +178,18 @@ foreach ($materiasNuevos as $data) {
         $enlaceCarpeta = "https://drive.google.com/drive/folders/{$parent}";
         $mensaje .= "\n📂 {$nombreCarpeta}\n";
         $mensaje .= "🔗 [Abrir carpeta]({$enlaceCarpeta})\n";
+
+        // Marcar como notificados los PDF ignorados (hay Word en la misma carpeta)
+        if ($tieneWord) {
+            foreach ($archivosCarpeta as $a) {
+                $m = $a['mimeType'];
+                if ($m !== 'application/msword' && $m !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                    $db->prepare("UPDATE documentos_drive SET notificado = TRUE WHERE materia_id = :mid AND archivo_id = :aid")
+                       ->execute([':mid' => $data['id'], ':aid' => $a['id']]);
+                    logMsg("  PDF omitido (hay Word en carpeta): {$a['name']}");
+                }
+            }
+        }
     }
 
     $mensaje .= "\n💡 Revisa el material disponible";
