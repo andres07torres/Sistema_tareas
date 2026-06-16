@@ -91,8 +91,56 @@ foreach ($materias as $materia) {
 
     logMsg("  Archivos encontrados: " . count($archivos));
 
+    // Separar archivos nuevos de los ya registrados
+    $nuevos = [];
+    $idsExistentes = [];
+
+    foreach ($archivos as $archivo) {
+        $check = $db->prepare("SELECT id FROM documentos_drive WHERE materia_id = :mid AND archivo_id = :aid");
+        $check->execute([':mid' => $materia['id'], ':aid' => $archivo['id']]);
+        if ($check->fetch()) {
+            $idsExistentes[] = $archivo['id'];
+        } else {
+            $nuevos[] = $archivo;
+        }
+    }
+
+    // Agrupar nuevos por carpeta padre
+    $porCarpeta = [];
+    foreach ($nuevos as $archivo) {
+        $parent = $archivo['parentFolder'] ?? $folderId;
+        $porCarpeta[$parent][] = $archivo;
+    }
+
+    // Determinar qué notificar según la regla: si hay Word en la carpeta, solo Word; si no, PDF
+    $aNotificar = [];
+    foreach ($porCarpeta as $parent => $archivosCarpeta) {
+        $tieneWord = false;
+        foreach ($archivosCarpeta as $a) {
+            if ($a['mimeType'] === 'application/msword' || $a['mimeType'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                $tieneWord = true;
+                break;
+            }
+        }
+        foreach ($archivosCarpeta as $a) {
+            if ($tieneWord) {
+                if ($a['mimeType'] === 'application/msword' || $a['mimeType'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                    $aNotificar[] = $a;
+                }
+            } else {
+                $aNotificar[] = $a;
+            }
+        }
+    }
+
     foreach ($archivos as $archivo) {
         $archivoId = $archivo['id'];
+
+        // Si ya existe en BD, saltar
+        if (in_array($archivoId, $idsExistentes)) {
+            continue;
+        }
+
         $nombre = $archivo['name'];
         $mimeType = $archivo['mimeType'];
         $tipo = obtenerTipoDocumento($mimeType);
@@ -100,16 +148,7 @@ foreach ($materias as $materia) {
         $enlace = "https://drive.google.com/drive/folders/{$folderParent}";
         $creadoEn = $archivo['createdTime'] ?? date('c');
 
-        // Verificar si ya existe registrado
-        $check = $db->prepare("SELECT id, notificado FROM documentos_drive WHERE materia_id = :mid AND archivo_id = :aid");
-        $check->execute([':mid' => $materia['id'], ':aid' => $archivoId]);
-        $existente = $check->fetch(PDO::FETCH_ASSOC);
-
-        if ($existente) {
-            continue; // Ya registrado
-        }
-
-        // Insertar nuevo documento
+        // Insertar nuevo documento (siempre se registra)
         $insert = $db->prepare("INSERT INTO documentos_drive (materia_id, archivo_id, nombre, tipo, enlace, detectado_en, notificado)
                                 VALUES (:mid, :aid, :nom, :tip, :enl, NOW(), FALSE)");
         $insert->execute([
@@ -122,6 +161,23 @@ foreach ($materias as $materia) {
 
         $totalNuevos++;
         logMsg("  Nuevo documento: $nombre ($tipo) - {$materia['nombre']}");
+
+        // Verificar si este archivo debe ser notificado según la regla
+        $debeNotificar = false;
+        foreach ($aNotificar as $n) {
+            if ($n['id'] === $archivoId) {
+                $debeNotificar = true;
+                break;
+            }
+        }
+
+        if (!$debeNotificar) {
+            // Marcar como notificado sin enviar (PDF ignorado porque hay Word en la misma carpeta)
+            $db->prepare("UPDATE documentos_drive SET notificado = TRUE WHERE materia_id = :mid AND archivo_id = :aid")
+               ->execute([':mid' => $materia['id'], ':aid' => $archivoId]);
+            logMsg("  Omitido (hay Word en la misma carpeta): $nombre");
+            continue;
+        }
 
         // Notificar si fue creado en los últimos 3 días
         $creadoTimestamp = strtotime($creadoEn);
@@ -136,7 +192,6 @@ foreach ($materias as $materia) {
                 logMsg("  Fallo notificación para: $nombre");
             }
         } else {
-            // Archivo viejo, marcar como notificado sin enviar
             $db->prepare("UPDATE documentos_drive SET notificado = TRUE WHERE materia_id = :mid AND archivo_id = :aid")
                ->execute([':mid' => $materia['id'], ':aid' => $archivoId]);
             logMsg("  Omitido (archivo viejo): $nombre ({$creadoEn})");
