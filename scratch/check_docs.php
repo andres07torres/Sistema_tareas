@@ -1,11 +1,17 @@
 <?php
-require_once 'config/database.php';
+require_once __DIR__ . '/../config/database.php';
 $db = (new Database())->getConnection();
 
-$stmt = $db->query("SELECT d.id, d.nombre, d.notificado, to_char(d.detectado_en, 'YYYY-MM-DD HH24:MI') as detectado, m.nombre AS materia FROM documentos_drive d JOIN materias m ON m.id = d.materia_id ORDER BY d.detectado_en DESC");
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+echo "=== DOCUMENTOS DRIVE ===\n";
+$stmt = $db->query("SELECT d.*, m.nombre as materia_nombre FROM documentos_drive d JOIN materias m ON m.id = d.materia_id ORDER BY d.detectado_en DESC LIMIT 20");
+$docs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+echo "Total: " . count($docs) . "\n";
+foreach ($docs as $d) {
+    print_r($d);
+}
 
-echo "Total documentos: " . count($rows) . "\n";
-foreach ($rows as $r) {
-    echo "id={$r['id']} materia={$r['materia']} nombre={$r['nombre']} notificado={$r['notificado']} detectado={$r['detectado']}\n";
+echo "\n=== MATERIAS ===\n";
+$stmt = $db->query("SELECT id, nombre, drive_link FROM materias WHERE drive_link IS NOT NULL ORDER BY nombre");
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    print_r($row);
 }

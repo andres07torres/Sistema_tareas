@@ -86,7 +86,7 @@ foreach ($materias as $materia) {
 
     logMsg("Escaneando: {$materia['nombre']} (folder: $folderId)");
 
-    $archivos = listarArchivosRecursivo($accessToken, $folderId, 1);
+    $archivos = listarArchivosRecursivo($accessToken, $folderId, -1);
     if ($archivos === false) {
         logMsg("Error al listar archivos de: {$materia['nombre']}");
         continue;
@@ -176,7 +176,20 @@ foreach ($materiasNuevos as $data) {
         }
 
         $enlaceCarpeta = "https://drive.google.com/drive/folders/{$parent}";
-        $mensaje .= "\n📂 {$nombreCarpeta}\n";
+        $mensaje .= "\n👤 *{$nombreCarpeta}* ha subido documentos:\n";
+
+        $archivosAMostrar = $tieneWord
+            ? array_filter($archivosCarpeta, function ($a) {
+                $m = $a['mimeType'];
+                return $m === 'application/msword' || $m === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+              })
+            : $archivosCarpeta;
+
+        foreach ($archivosAMostrar as $a) {
+            $icono = $a['mimeType'] === 'application/pdf' ? '📄' : '📃';
+            $mensaje .= "{$icono} {$a['name']}\n";
+        }
+
         $mensaje .= "🔗 [Abrir carpeta]({$enlaceCarpeta})\n";
 
         // Marcar como notificados los PDF ignorados (hay Word en la misma carpeta)

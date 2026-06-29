@@ -39,8 +39,10 @@ if (empty($telegramToken)) {
     exit;
 }
 
-    $mensaje = "📁 ACTIVIDADES CARGADAS EN DRIVE 📁\n\n";
+    $icono = $doc['tipo'] === 'PDF' ? '📄' : '📃';
+    $mensaje = "📁 DOCUMENTO EN DRIVE 📁\n\n";
     $mensaje .= "📘 Materia: {$doc['materia_nombre']}\n";
+    $mensaje .= "{$icono} *{$doc['nombre']}*\n";
     $mensaje .= "🔗 [Abrir en Drive]({$doc['enlace']})\n\n";
     $mensaje .= "💡 Revisa el material disponible";
 
