@@ -196,6 +196,72 @@ $documentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             .stat-box .num { font-size: 1.1rem; }
             .materia-badge { font-size: 0.65rem; padding: 0.2rem 0.4rem; }
         }
+
+        .maintenance-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.5rem 0.8rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .maintenance-btn:hover {
+            background: #fff3e0;
+            color: #e65100;
+            border-color: #e65100;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h2 {
+            margin: 0 0 0.5rem;
+            font-size: 1.3rem;
+            color: #0f172a;
+        }
+
+        .modal-content p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .modal-close-btn {
+            background: #0f172a;
+            color: white;
+            border: none;
+            padding: 0.6rem 2rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .modal-close-btn:hover { background: #1e293b; }
     </style>
 </head>
 <body>
@@ -216,7 +282,19 @@ $documentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </a>
                 <?php endif; ?>
             </form>
+            <button class="maintenance-btn" onclick="mostrarMantenimiento()" title="Mantenimiento">
+                <i data-lucide="wrench" size="18"></i>
+            </button>
         </header>
+
+        <div id="modal-mantenimiento" class="modal-overlay" onclick="cerrarMantenimiento(event)">
+            <div class="modal-content">
+                <i data-lucide="construction" size="48" style="color: var(--accent-warning, #e65100); margin-bottom: 1rem;"></i>
+                <h2>🔧 En Mantenimiento</h2>
+                <p>Estamos en mantenimiento para mejorar cambios y así.</p>
+                <button class="modal-close-btn" onclick="cerrarMantenimiento()">Cerrar</button>
+            </div>
+        </div>
 
         <?php 
         $totalDocs = count($documentos);
@@ -301,6 +379,16 @@ $documentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         lucide.createIcons();
+
+        function mostrarMantenimiento() {
+            document.getElementById('modal-mantenimiento').classList.add('active');
+            lucide.createIcons();
+        }
+
+        function cerrarMantenimiento(e) {
+            if (e && e.target !== e.currentTarget) return;
+            document.getElementById('modal-mantenimiento').classList.remove('active');
+        }
 
         async function notificar(id) {
             if (!confirm('¿Enviar notificación de este documento a todos los suscriptores?')) return;
