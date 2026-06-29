@@ -95,23 +95,45 @@ foreach ($materias as $materia) {
     logMsg("  Archivos encontrados: " . count($archivos));
 
     $nuevos = [];
+    $actualizados = [];
+    $reemplazados = [];
 
     foreach ($archivos as $archivo) {
-        $check = $db->prepare("SELECT id FROM documentos_drive WHERE materia_id = :mid AND archivo_id = :aid");
+        $check = $db->prepare("SELECT id, modified_at FROM documentos_drive WHERE materia_id = :mid AND archivo_id = :aid");
         $check->execute([':mid' => $materia['id'], ':aid' => $archivo['id']]);
-        if (!$check->fetch()) {
-            $nuevos[] = $archivo;
+        $existente = $check->fetch(PDO::FETCH_ASSOC);
+
+        if (!$existente) {
+            $checkByName = $db->prepare("SELECT id FROM documentos_drive WHERE materia_id = :mid AND nombre = :nom");
+            $checkByName->execute([':mid' => $materia['id'], ':nom' => $archivo['name']]);
+            $existentePorNombre = $checkByName->fetch(PDO::FETCH_ASSOC);
+
+            if ($existentePorNombre) {
+                $archivo['_tipo_cambio'] = 'reemplazado';
+                $archivo['_db_id'] = $existentePorNombre['id'];
+                $reemplazados[] = $archivo;
+            } else {
+                $archivo['_tipo_cambio'] = 'nuevo';
+                $nuevos[] = $archivo;
+            }
+        } elseif ($existente['modified_at'] === null || strtotime($archivo['modifiedTime']) > strtotime($existente['modified_at'])) {
+            $archivo['_tipo_cambio'] = 'actualizado';
+            $archivo['_db_id'] = $existente['id'];
+            $actualizados[] = $archivo;
         }
     }
 
-    if (empty($nuevos)) {
-        logMsg("  Sin documentos nuevos.");
+    if (empty($nuevos) && empty($actualizados) && empty($reemplazados)) {
+        logMsg("  Sin documentos nuevos ni actualizados.");
         continue;
     }
 
+    $totalCambios = count($nuevos) + count($actualizados) + count($reemplazados);
+    logMsg("  Documentos nuevos: " . count($nuevos) . ", actualizados: " . count($actualizados) . ", reemplazados: " . count($reemplazados));
+
     // Agrupar por carpeta padre
     $porCarpeta = [];
-    foreach ($nuevos as $archivo) {
+    foreach (array_merge($nuevos, $actualizados, $reemplazados) as $archivo) {
         $parent = $archivo['parentFolder'] ?? $folderId;
         $porCarpeta[$parent][] = $archivo;
     }
@@ -121,35 +143,54 @@ foreach ($materias as $materia) {
         'nombre' => $materia['nombre'],
         'folderId' => $folderId,
         'nuevos' => $nuevos,
+        'actualizados' => $actualizados,
+        'reemplazados' => $reemplazados,
         'porCarpeta' => $porCarpeta,
     ];
 }
 
-// Segunda pasada: insertar en BD y notificar agrupado por materia
+// Segunda pasada: insertar/actualizar BD y notificar agrupado por materia
 foreach ($materiasNuevos as $data) {
-    $totalNuevos += count($data['nuevos']);
+    $totalNuevos += count($data['nuevos']) + count($data['actualizados']) + count($data['reemplazados']);
 
-    // Insertar todos los nuevos en BD
-    foreach ($data['nuevos'] as $archivo) {
+    // Insertar nuevos y actualizar existentes en BD
+    $todosCambios = array_merge($data['nuevos'], $data['actualizados'], $data['reemplazados']);
+    foreach ($todosCambios as $archivo) {
         $tipo = obtenerTipoDocumento($archivo['mimeType']);
         $folderParent = $archivo['parentFolder'] ?? $data['folderId'];
         $enlace = "https://drive.google.com/drive/folders/{$folderParent}";
+        $modifiedTime = $archivo['modifiedTime'] ?? date('Y-m-d H:i:s');
 
-        $insert = $db->prepare("INSERT INTO documentos_drive (materia_id, archivo_id, nombre, tipo, enlace, detectado_en, notificado)
-                                VALUES (:mid, :aid, :nom, :tip, :enl, NOW(), FALSE)");
-        $insert->execute([
-            ':mid' => $data['id'],
-            ':aid' => $archivo['id'],
-            ':nom' => $archivo['name'],
-            ':tip' => $tipo,
-            ':enl' => $enlace,
-        ]);
-
-        logMsg("  Nuevo: {$archivo['name']} ($tipo) - {$data['nombre']}");
+        if ($archivo['_tipo_cambio'] === 'nuevo') {
+            $insert = $db->prepare("INSERT INTO documentos_drive (materia_id, archivo_id, nombre, tipo, enlace, detectado_en, modified_at, notificado)
+                                    VALUES (:mid, :aid, :nom, :tip, :enl, NOW(), :modif, FALSE)");
+            $insert->execute([
+                ':mid' => $data['id'],
+                ':aid' => $archivo['id'],
+                ':nom' => $archivo['name'],
+                ':tip' => $tipo,
+                ':enl' => $enlace,
+                ':modif' => $modifiedTime,
+            ]);
+            logMsg("  Nuevo: {$archivo['name']} ($tipo) - {$data['nombre']}");
+        } else {
+            $update = $db->prepare("UPDATE documentos_drive SET archivo_id = :aid, nombre = :nom, tipo = :tip, enlace = :enl, modified_at = :modif, notificado = FALSE WHERE id = :id");
+            $update->execute([
+                ':aid' => $archivo['id'],
+                ':nom' => $archivo['name'],
+                ':tip' => $tipo,
+                ':enl' => $enlace,
+                ':modif' => $modifiedTime,
+                ':id' => $archivo['_db_id'],
+            ]);
+            $etiqueta = $archivo['_tipo_cambio'] === 'reemplazado' ? 'Reemplazado' : 'Actualizado';
+            logMsg("  $etiqueta: {$archivo['name']} ($tipo) - {$data['nombre']}");
+        }
     }
 
     // Construir un solo mensaje con todas las carpetas
-    $mensaje = "📁 ACTIVIDADES CARGADAS EN DRIVE 📁\n\n";
+    $totalItems = count($data['nuevos']) + count($data['actualizados']);
+    $mensaje = "📁 ACTIVIDADES EN DRIVE 📁\n\n";
     $mensaje .= "📘 Materia: {$data['nombre']}\n";
 
     foreach ($data['porCarpeta'] as $parent => $archivosCarpeta) {
@@ -176,7 +217,19 @@ foreach ($materiasNuevos as $data) {
         }
 
         $enlaceCarpeta = "https://drive.google.com/drive/folders/{$parent}";
-        $mensaje .= "\n👤 *{$nombreCarpeta}* ha subido documentos:\n";
+        $tieneNuevos = false;
+        $tieneActualizados = false;
+        $tieneReemplazados = false;
+        foreach ($archivosCarpeta as $a) {
+            if ($a['_tipo_cambio'] === 'nuevo') $tieneNuevos = true;
+            else if ($a['_tipo_cambio'] === 'actualizado') $tieneActualizados = true;
+            else if ($a['_tipo_cambio'] === 'reemplazado') $tieneReemplazados = true;
+        }
+        $accion = 'ha subido documentos';
+        if ($tieneReemplazados && !$tieneNuevos) $accion = 'ha reemplazado documentos';
+        if ($tieneActualizados) $accion = 'ha actualizado documentos';
+        if ($tieneReemplazados && $tieneNuevos) $accion = 'ha subido y reemplazado documentos';
+        $mensaje .= "\n👤 *{$nombreCarpeta}* {$accion}:\n";
 
         $archivosAMostrar = $tieneWord
             ? array_filter($archivosCarpeta, function ($a) {
@@ -187,7 +240,8 @@ foreach ($materiasNuevos as $data) {
 
         foreach ($archivosAMostrar as $a) {
             $icono = $a['mimeType'] === 'application/pdf' ? '📄' : '📃';
-            $mensaje .= "{$icono} {$a['name']}\n";
+            $etiqueta = $a['_tipo_cambio'] === 'actualizado' ? ' 🔄' : ($a['_tipo_cambio'] === 'reemplazado' ? ' ♻️' : '');
+            $mensaje .= "{$icono} {$a['name']}{$etiqueta}\n";
         }
 
         $mensaje .= "🔗 [Abrir carpeta]({$enlaceCarpeta})\n";
@@ -209,11 +263,12 @@ foreach ($materiasNuevos as $data) {
 
     // Enviar una sola notificación por materia
     if (enviarMensaje($db, $telegramToken, $mensaje)) {
-        foreach ($data['nuevos'] as $archivo) {
+        $todosItems = array_merge($data['nuevos'], $data['actualizados'], $data['reemplazados']);
+        foreach ($todosItems as $archivo) {
             $db->prepare("UPDATE documentos_drive SET notificado = TRUE WHERE materia_id = :mid AND archivo_id = :aid")
                ->execute([':mid' => $data['id'], ':aid' => $archivo['id']]);
         }
-        $totalNotificados += count($data['nuevos']);
+        $totalNotificados += count($todosItems);
         logMsg("  Notificación enviada para: {$data['nombre']} ({$totalNotificados} archivos)");
     } else {
         logMsg("  Fallo notificación para: {$data['nombre']}");
@@ -291,7 +346,7 @@ function listarArchivosRecursivo($accessToken, $folderId, $maxDepth = -1) {
         do {
             $params = [
                 'q' => "'$currentFolder' in parents and trashed=false",
-                'fields' => 'files(id,name,mimeType,createdTime),nextPageToken',
+                'fields' => 'files(id,name,mimeType,createdTime,modifiedTime),nextPageToken',
                 'pageSize' => 100,
             ];
             if ($pageToken) $params['pageToken'] = $pageToken;
