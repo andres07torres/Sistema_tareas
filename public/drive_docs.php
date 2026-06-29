@@ -215,53 +215,6 @@ $documentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             color: #e65100;
             border-color: #e65100;
         }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-overlay.active { display: flex; }
-
-        .modal-content {
-            background: white;
-            border-radius: 16px;
-            padding: 2.5rem;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .modal-content h2 {
-            margin: 0 0 0.5rem;
-            font-size: 1.3rem;
-            color: #0f172a;
-        }
-
-        .modal-content p {
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-            font-size: 0.95rem;
-        }
-
-        .modal-close-btn {
-            background: #0f172a;
-            color: white;
-            border: none;
-            padding: 0.6rem 2rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .modal-close-btn:hover { background: #1e293b; }
     </style>
 </head>
 <body>
@@ -282,19 +235,10 @@ $documentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </a>
                 <?php endif; ?>
             </form>
-            <button class="maintenance-btn" onclick="mostrarMantenimiento()" title="Mantenimiento">
+            <button class="maintenance-btn" onclick="enviarMantenimiento()" title="Notificar mantenimiento">
                 <i data-lucide="wrench" size="18"></i>
             </button>
         </header>
-
-        <div id="modal-mantenimiento" class="modal-overlay" onclick="cerrarMantenimiento(event)">
-            <div class="modal-content">
-                <i data-lucide="construction" size="48" style="color: var(--accent-warning, #e65100); margin-bottom: 1rem;"></i>
-                <h2>🔧 En Mantenimiento</h2>
-                <p>Estamos en mantenimiento para mejorar cambios y así.</p>
-                <button class="modal-close-btn" onclick="cerrarMantenimiento()">Cerrar</button>
-            </div>
-        </div>
 
         <?php 
         $totalDocs = count($documentos);
@@ -380,14 +324,29 @@ $documentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script>
         lucide.createIcons();
 
-        function mostrarMantenimiento() {
-            document.getElementById('modal-mantenimiento').classList.add('active');
-            lucide.createIcons();
-        }
+        async function enviarMantenimiento() {
+            if (!confirm('¿Notificar a todos que el sistema esta en mantenimiento?')) return;
 
-        function cerrarMantenimiento(e) {
-            if (e && e.target !== e.currentTarget) return;
-            document.getElementById('modal-mantenimiento').classList.remove('active');
+            const btn = document.querySelector('.maintenance-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" size="16"></i>';
+            lucide.createIcons();
+
+            try {
+                const res = await fetch('api/api_mantenimiento.php');
+                const data = await res.json();
+                if (data.success) {
+                    alert('Mensaje de mantenimiento enviado a ' + data.enviados + ' suscriptor(es).');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error de conexion.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="wrench" size="16"></i>';
+                lucide.createIcons();
+            }
         }
 
         async function notificar(id) {
