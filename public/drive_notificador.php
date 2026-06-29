@@ -173,6 +173,17 @@ foreach ($materiasNuevos as $data) {
                 ':modif' => $modifiedTime,
             ]);
             logMsg("  Nuevo: {$archivo['name']} ($tipo) - {$data['nombre']}");
+        } elseif ($archivo['_tipo_cambio'] === 'reemplazado') {
+            $update = $db->prepare("UPDATE documentos_drive SET archivo_id = :aid, nombre = :nom, tipo = :tip, enlace = :enl, modified_at = :modif, notificado = TRUE WHERE id = :id");
+            $update->execute([
+                ':aid' => $archivo['id'],
+                ':nom' => $archivo['name'],
+                ':tip' => $tipo,
+                ':enl' => $enlace,
+                ':modif' => $modifiedTime,
+                ':id' => $archivo['_db_id'],
+            ]);
+            logMsg("  Reemplazado (sin notificacion): {$archivo['name']} ($tipo) - {$data['nombre']}");
         } else {
             $update = $db->prepare("UPDATE documentos_drive SET archivo_id = :aid, nombre = :nom, tipo = :tip, enlace = :enl, modified_at = :modif, notificado = FALSE WHERE id = :id");
             $update->execute([
@@ -183,20 +194,32 @@ foreach ($materiasNuevos as $data) {
                 ':modif' => $modifiedTime,
                 ':id' => $archivo['_db_id'],
             ]);
-            $etiqueta = $archivo['_tipo_cambio'] === 'reemplazado' ? 'Reemplazado' : 'Actualizado';
-            logMsg("  $etiqueta: {$archivo['name']} ($tipo) - {$data['nombre']}");
+            logMsg("  Actualizado: {$archivo['name']} ($tipo) - {$data['nombre']}");
         }
     }
 
+    // Solo construir mensaje si hay nuevos o actualizados (los reemplazados no se notifican)
+    $itemsNotificables = array_merge($data['nuevos'], $data['actualizados']);
+    if (empty($itemsNotificables)) {
+        logMsg("  Solo reemplazos, sin notificacion para: {$data['nombre']}");
+        continue;
+    }
+
     // Construir un solo mensaje con todas las carpetas
-    $totalItems = count($data['nuevos']) + count($data['actualizados']);
+    $totalItems = count($itemsNotificables);
     $mensaje = "📁 ACTIVIDADES EN DRIVE 📁\n\n";
     $mensaje .= "📘 Materia: {$data['nombre']}\n";
 
     foreach ($data['porCarpeta'] as $parent => $archivosCarpeta) {
+        // Filtrar solo los que se notifican (excluir reemplazados silenciosos)
+        $archivosNotificables = array_filter($archivosCarpeta, function ($a) {
+            return $a['_tipo_cambio'] !== 'reemplazado';
+        });
+        if (empty($archivosNotificables)) continue;
+
         // Preferir Word sobre PDF: si hay Word, solo mostrar Word; mostrar todo si solo hay PDF
         $tieneWord = false;
-        foreach ($archivosCarpeta as $a) {
+        foreach ($archivosNotificables as $a) {
             $m = $a['mimeType'];
             if ($m === 'application/msword' || $m === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
                 $tieneWord = true;
@@ -219,28 +242,23 @@ foreach ($materiasNuevos as $data) {
         $enlaceCarpeta = "https://drive.google.com/drive/folders/{$parent}";
         $tieneNuevos = false;
         $tieneActualizados = false;
-        $tieneReemplazados = false;
-        foreach ($archivosCarpeta as $a) {
+        foreach ($archivosNotificables as $a) {
             if ($a['_tipo_cambio'] === 'nuevo') $tieneNuevos = true;
             else if ($a['_tipo_cambio'] === 'actualizado') $tieneActualizados = true;
-            else if ($a['_tipo_cambio'] === 'reemplazado') $tieneReemplazados = true;
         }
-        $accion = 'ha subido documentos';
-        if ($tieneReemplazados && !$tieneNuevos) $accion = 'ha reemplazado documentos';
-        if ($tieneActualizados) $accion = 'ha actualizado documentos';
-        if ($tieneReemplazados && $tieneNuevos) $accion = 'ha subido y reemplazado documentos';
+        $accion = $tieneNuevos && $tieneActualizados ? 'ha subido y actualizado documentos' : ($tieneNuevos ? 'ha subido documentos' : 'ha actualizado documentos');
         $mensaje .= "\n👤 *{$nombreCarpeta}* {$accion}:\n";
 
         $archivosAMostrar = $tieneWord
-            ? array_filter($archivosCarpeta, function ($a) {
+            ? array_filter($archivosNotificables, function ($a) {
                 $m = $a['mimeType'];
                 return $m === 'application/msword' || $m === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
               })
-            : $archivosCarpeta;
+            : $archivosNotificables;
 
         foreach ($archivosAMostrar as $a) {
             $icono = $a['mimeType'] === 'application/pdf' ? '📄' : '📃';
-            $etiqueta = $a['_tipo_cambio'] === 'actualizado' ? ' 🔄' : ($a['_tipo_cambio'] === 'reemplazado' ? ' ♻️' : '');
+            $etiqueta = $a['_tipo_cambio'] === 'actualizado' ? ' 🔄' : '';
             $mensaje .= "{$icono} {$a['name']}{$etiqueta}\n";
         }
 
@@ -248,7 +266,7 @@ foreach ($materiasNuevos as $data) {
 
         // Marcar como notificados los PDF ignorados (hay Word en la misma carpeta)
         if ($tieneWord) {
-            foreach ($archivosCarpeta as $a) {
+            foreach ($archivosNotificables as $a) {
                 $m = $a['mimeType'];
                 if ($m !== 'application/msword' && $m !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
                     $db->prepare("UPDATE documentos_drive SET notificado = TRUE WHERE materia_id = :mid AND archivo_id = :aid")
@@ -263,12 +281,11 @@ foreach ($materiasNuevos as $data) {
 
     // Enviar una sola notificación por materia
     if (enviarMensaje($db, $telegramToken, $mensaje)) {
-        $todosItems = array_merge($data['nuevos'], $data['actualizados'], $data['reemplazados']);
-        foreach ($todosItems as $archivo) {
+        foreach ($itemsNotificables as $archivo) {
             $db->prepare("UPDATE documentos_drive SET notificado = TRUE WHERE materia_id = :mid AND archivo_id = :aid")
                ->execute([':mid' => $data['id'], ':aid' => $archivo['id']]);
         }
-        $totalNotificados += count($todosItems);
+        $totalNotificados += count($itemsNotificables);
         logMsg("  Notificación enviada para: {$data['nombre']} ({$totalNotificados} archivos)");
     } else {
         logMsg("  Fallo notificación para: {$data['nombre']}");
