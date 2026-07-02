@@ -228,7 +228,7 @@ foreach ($materiasNuevos as $data) {
         }
 
         $nombreCarpeta = $parent;
-        $ch = curl_init("https://www.googleapis.com/drive/v3/files/{$parent}?fields=name,owners(displayName)");
+        $ch = curl_init("https://www.googleapis.com/drive/v3/files/{$parent}?fields=name,owners(displayName,emailAddress)");
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $accessToken]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -236,8 +236,22 @@ foreach ($materiasNuevos as $data) {
         $res = curl_exec($ch);
         $folderData = json_decode($res, true);
 
+        $moderadorEmail = 'dmorenoa3@unemi.edu.ec';
+
         if (isset($folderData['owners'][0]['displayName'])) {
-            $nombreCarpeta = $folderData['owners'][0]['displayName'];
+            $nombreCompleto = trim($folderData['owners'][0]['displayName']);
+            $partes = explode(' ', $nombreCompleto);
+            $total = count($partes);
+            if ($total >= 4) {
+                $nombreCarpeta = ucwords(mb_strtolower($partes[2] . ' ' . $partes[0]));
+            } elseif ($total === 3) {
+                $nombreCarpeta = ucwords(mb_strtolower($partes[1] . ' ' . $partes[0]));
+            } else {
+                $nombreCarpeta = ucwords(mb_strtolower($nombreCompleto));
+            }
+            $ownerEmail = $folderData['owners'][0]['emailAddress'] ?? '';
+            $rol = ($ownerEmail === $moderadorEmail) ? 'Moderador' : 'Colaborador';
+            $nombreCarpeta .= " - {$rol}";
         } elseif (isset($folderData['name'])) {
             $nombreCarpeta = $folderData['name'];
         }
