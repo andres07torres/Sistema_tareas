@@ -228,14 +228,17 @@ foreach ($materiasNuevos as $data) {
         }
 
         $nombreCarpeta = $parent;
-        $ch = curl_init("https://www.googleapis.com/drive/v3/files/{$parent}?fields=name");
+        $ch = curl_init("https://www.googleapis.com/drive/v3/files/{$parent}?fields=name,owners(displayName)");
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $accessToken]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         $res = curl_exec($ch);
         $folderData = json_decode($res, true);
-        if (isset($folderData['name'])) {
+
+        if (isset($folderData['owners'][0]['displayName'])) {
+            $nombreCarpeta = $folderData['owners'][0]['displayName'];
+        } elseif (isset($folderData['name'])) {
             $nombreCarpeta = $folderData['name'];
         }
 
