@@ -195,6 +195,7 @@ $documentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             .stat-box { padding: 0.8rem; }
             .stat-box .num { font-size: 1.1rem; }
             .materia-badge { font-size: 0.65rem; padding: 0.2rem 0.4rem; }
+            .maintenance-btn { align-self: flex-end; width: fit-content; }
         }
 
         .maintenance-btn {

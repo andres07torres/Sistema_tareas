@@ -23,7 +23,7 @@ if (empty($suscriptores)) {
     exit;
 }
 
-$mensaje = "🔧 *SISTEMA EN MANTENIMIENTO* 🔧\n\nEstamos en mantenimiento para mejorar cambios y así.\n\n⚠️ Algunas funciones pueden no estar disponibles temporalmente.\n\nGracias por tu paciencia.";
+$mensaje = "🔧 *SISTEMA EN MANTENIMIENTO* 🔧\n\nEstamos realizando mejoras en el sistema para optimizar la experiencia.\n\n⚠️ Es posible que algunas funciones no estén disponibles temporalmente.\n\nGracias por tu comprensión y paciencia. 🙌";
 
 $enviados = 0;
 foreach ($suscriptores as $sub) {
