@@ -5,7 +5,7 @@ class Database {
 
     public function getConnection() {
         try {
-            $dsn = "pgsql:host=sistema-tareas-bot-supabase-ojj6pm-db;port=5432;dbname=postgres";
+            $dsn = "pgsql:host=sistema-tareas-bot-supabase-ojj6pm-db-1;port=5432;dbname=postgres";
             $conn = new PDO($dsn, 'postgres', 'pbxybjcvlotd9ffllpgibqk9pzyo3umq');
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
