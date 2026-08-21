@@ -2,15 +2,9 @@
 date_default_timezone_set('America/Guayaquil');
 class Database {
     public function getConnection() {
-        $host = 'db';
-        $port = 5432;
-        $dbname = 'postgres';
-        $user = 'postgres';
-        $password = 'pbxybjcvlotd9ffllpgibqk9pzyo3umq';
-
         try {
-            $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
-            $conn = new PDO($dsn, $user, $password);
+            $dsn = "pgsql:host=sistema-tareas-bot-supabase-ojj6pm-db;port=5432;dbname=postgres";
+            $conn = new PDO($dsn, 'postgres', 'pbxybjcvlotd9ffllpgibqk9pzyo3umq');
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             return $conn;
         } catch(PDOException $e) {
