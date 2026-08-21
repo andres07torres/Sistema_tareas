@@ -1,12 +1,12 @@
 services:
   app:
     build: .
+    restart: always
     ports:
       - "8080:80"
-    volumes:
-      - .:/var/www/html
-    env_file:
-      - .env
-    restart: always
+    networks:
+      - sistema-tareas-bot-supabase-ojj6pm_default
 
-# El servicio estará disponible en http://localhost:8080
+networks:
+  sistema-tareas-bot-supabase-ojj6pm_default:
+    external: true
