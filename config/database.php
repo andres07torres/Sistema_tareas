@@ -2,11 +2,11 @@
 date_default_timezone_set('America/Guayaquil');
 class Database {
     public function getConnection() {
-        $host = 'sistema-tareas-bot-supabase-437ae8-179-49-57-189.sslip.io';
-        $port = '6543';
-        $dbname = 'postgres';
-        $user = 'postgres';
-        $password = 'pbxybjcvlotd9ffllpgibqk9pzyo3umq';
+        $host = $_ENV['DB_HOST'] ?? getenv('DB_HOST');
+        $port = $_ENV['DB_PORT'] ?? getenv('DB_PORT');
+        $dbname = $_ENV['DB_NAME'] ?? getenv('DB_NAME');
+        $user = $_ENV['DB_USER'] ?? getenv('DB_USER');
+        $password = $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD');
 
         try {
             $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
