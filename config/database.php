@@ -5,8 +5,14 @@ class Database {
 
     public function getConnection() {
         try {
-            $dsn = "pgsql:host=sistema-tareas-bot-supabase-437ae8-179-49-57-189.sslip.io;port=6543;dbname=postgres";
-            $conn = new PDO($dsn, 'postgres', 'pbxybjcvlotd9ffllpgibqk9pzyo3umq');
+            $host = getenv('DB_HOST');
+            $port = getenv('DB_PORT');
+            $dbname = getenv('DB_NAME');
+            $user = getenv('DB_USER');
+            $password = getenv('DB_PASSWORD');
+
+            $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
+            $conn = new PDO($dsn, $user, $password);
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             if (!self::$migrated) {
