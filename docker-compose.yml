@@ -2,3 +2,23 @@ services:
   app:
     build: .
     restart: always
+    env_file:
+      - .env
+    labels:
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.sistema-tareas-bot-zi53w4-4-web.rule=Host(`tareas.andr3sdev7.com`)
+      - traefik.http.routers.sistema-tareas-bot-zi53w4-4-web.entrypoints=web
+      - traefik.http.services.sistema-tareas-bot-zi53w4-4-web.loadbalancer.server.port=80
+      - traefik.http.routers.sistema-tareas-bot-zi53w4-4-web.service=sistema-tareas-bot-zi53w4-4-web
+      - traefik.enable=true
+    networks:
+      - dokploy-network
+      - default
+      - supabase-net
+
+networks:
+  dokploy-network:
+    external: true
+  supabase-net:
+    external: true
+    name: sistema-tareas-bot-supabase-ojj6pm_default
