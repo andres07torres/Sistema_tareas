@@ -8,6 +8,9 @@ RUN apt-get update && apt-get install -y \
 # Habilitar el módulo rewrite de Apache
 RUN a2enmod rewrite
 
+# Configurar PHP para leer variables de entorno con getenv()
+RUN echo 'variables_order = "EGPCS"' > /usr/local/etc/php/conf.d/env-vars.ini
+
 # Cambiar el DocumentRoot de Apache a la carpeta /public
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf

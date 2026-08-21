@@ -2,8 +2,6 @@ services:
   app:
     build: .
     restart: always
-    env_file:
-      - .env
     labels:
       - traefik.docker.network=dokploy-network
       - traefik.http.routers.sistema-tareas-bot-zi53w4-4-web.rule=Host(`tareas.andr3sdev7.com`)
@@ -13,7 +11,6 @@ services:
       - traefik.enable=true
     networks:
       - dokploy-network
-      - default
       - supabase-net
 
 networks:
