@@ -3,12 +3,8 @@ services:
     build: .
     restart: always
     networks:
-      - default_network
       - sistema-tareas-bot-supabase-ojj6pm_default
 
 networks:
-  default_network:
-    external: true
-    name: dokploy-network
   sistema-tareas-bot-supabase-ojj6pm_default:
     external: true
