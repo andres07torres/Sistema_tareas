@@ -12,11 +12,12 @@ class Database {
             $user = $env['DB_USER'];
             $password = $env['DB_PASSWORD'];
         } else {
-            $host = $_ENV['DB_HOST'] ?? getenv('DB_HOST');
-            $port = $_ENV['DB_PORT'] ?? getenv('DB_PORT');
-            $dbname = $_ENV['DB_NAME'] ?? getenv('DB_NAME');
-            $user = $_ENV['DB_USER'] ?? getenv('DB_USER');
-            $password = $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD');
+            // En Dokploy/Producción: leer variables del sistema
+            $host = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: 'sistema-tareas-bot-supabase-437ae8-179-49-57-189.sslip.io';
+            $port = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '6543';
+            $dbname = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'postgres';
+            $user = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'postgres';
+            $password = $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?: 'pbxybjcvlotd9ffllpgibqk9pzyo3umq';
         }
 
         try {
