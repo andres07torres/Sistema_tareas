@@ -447,6 +447,9 @@ try {
         enviarRespuesta($chatId, $telegramToken, "🌟 *FRASE DEL DÍA*\n📅 {$dia} de {$mes}\n\n_{$frase}_\n\n💪 ¡A darle con todo!");
     }
 
-} catch (Exception $e) {
-    enviarRespuesta($chatId, $telegramToken, "⚠️ Error: " . $e->getMessage());
+} catch (\Throwable $e) {
+    error_log("WEBHOOK ERROR: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+    if (isset($chatId) && isset($telegramToken)) {
+        enviarRespuesta($chatId, $telegramToken, "⚠️ Error: " . $e->getMessage());
+    }
 }

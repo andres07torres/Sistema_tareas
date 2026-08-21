@@ -2,3 +2,4 @@
 /vendor/
 *.log
 credentials.json
+docker-compose.override.yml
