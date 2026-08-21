@@ -5,11 +5,11 @@ class Database {
 
     public function getConnection() {
         try {
-            $host = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? '');
-            $port = getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? '5432');
-            $dbname = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'postgres');
-            $user = getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? 'postgres');
-            $password = getenv('DB_PASSWORD') ?: ($_ENV['DB_PASSWORD'] ?? '');
+            $host = trim(getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? ''), '"');
+            $port = (int) trim(getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? '5432'), '"');
+            $dbname = trim(getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'postgres'), '"');
+            $user = trim(getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? 'postgres'), '"');
+            $password = trim(getenv('DB_PASSWORD') ?: ($_ENV['DB_PASSWORD'] ?? ''), '"');
 
             $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
             $conn = new PDO($dsn, $user, $password);
