@@ -20,7 +20,9 @@ $telegramToken = $_ENV['TELEGRAM_TOKEN'] ?? getenv('TELEGRAM_TOKEN');
 
 // 2. RECIBIR DATOS
 $content = file_get_contents("php://input");
+error_log("WEBHOOK RAW INPUT: " . $content);
 $update = json_decode($content, true);
+error_log("WEBHOOK PARSED: " . json_encode($update));
 
 if (!$update || (!isset($update["message"]) && !isset($update["callback_query"]))) {
     die("Sin mensaje ni callback.");
