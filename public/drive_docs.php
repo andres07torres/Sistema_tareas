@@ -1,6 +1,7 @@
 <?php
 require_once '../config/auth.php';
 startSession();
+requireAuth();
 require_once '../config/database.php';
 
 $db = (new Database())->getConnection();
@@ -65,6 +66,7 @@ $documentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding: 0.5rem 1rem;
             max-width: 320px;
             width: 100%;
+            margin-left: auto;
         }
 
         .search-bar input {

@@ -19,6 +19,16 @@ function requireAuth() {
     }
 }
 
+function requireApiAuth() {
+    startSession();
+    if (!isAuthenticated()) {
+        header('Content-Type: application/json');
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'No autenticado']);
+        exit;
+    }
+}
+
 function authenticate($user, $pass) {
     $validUser = trim(getenv('ADMIN_USER') ?: ($_ENV['ADMIN_USER'] ?? 'admin'), '"');
     $validHash = trim(getenv('ADMIN_PASSWORD_HASH') ?: ($_ENV['ADMIN_PASSWORD_HASH'] ?? ''), '"');

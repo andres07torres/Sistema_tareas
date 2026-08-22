@@ -1,4 +1,6 @@
 <?php
+require_once '../../config/auth.php';
+requireApiAuth();
 require_once '../../config/database.php';
 header('Content-Type: application/json');
 
