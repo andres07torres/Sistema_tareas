@@ -1,3 +1,7 @@
+<?php
+require_once '../config/auth.php';
+startSession();
+?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -36,6 +40,12 @@
             <i data-lucide="hard-drive"></i>
             <span>Documentos Drive</span>
         </a>
+        <?php if (isAuthenticated()): ?>
+        <a href="logout.php" class="nav-link">
+            <i data-lucide="log-out"></i>
+            <span>Cerrar sesión</span>
+        </a>
+        <?php endif; ?>
     </div>
 </nav>
 

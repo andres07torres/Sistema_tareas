@@ -1,4 +1,6 @@
 <?php
+require_once '../config/auth.php';
+startSession();
 // deploy trigger v2
 require_once '../config/database.php';
 $db = (new Database())->getConnection();

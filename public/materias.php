@@ -1,4 +1,6 @@
 <?php
+require_once '../config/auth.php';
+startSession();
 require_once '../config/database.php';
 
 $db = (new Database())->getConnection();
