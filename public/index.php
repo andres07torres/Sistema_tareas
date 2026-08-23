@@ -1,4 +1,10 @@
 <?php
+// Dashboard principal del Asistente de Tareas UNEMI.
+// Notificaciones diarias automáticas (cron en Supabase -> pg_cron):
+//   - motivador.php     : mensaje "Buenos días" + frase  (08:00 Ecuador)
+//   - notificador.php   : reporte de tareas a vencer 0-7 días (14:00 Ecuador)
+//   - drive_notificador.php: novedades de Google Drive por materia (requiere drive_link)
+// Todas se invocan con ?token=CRON_TOKEN contra https://tareas.andr3sdev7.com
 require_once '../config/auth.php';
 startSession();
 requireAuth();
