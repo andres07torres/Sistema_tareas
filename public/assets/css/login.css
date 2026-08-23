@@ -24,7 +24,7 @@ body {
 .login-card {
     background: var(--card-bg);
     width: 100%;
-    max-width: 400px;
+    max-width: 340px;
     border-radius: 16px;
     padding: 2.5rem 2rem;
     box-shadow: 0 20px 40px rgba(0,0,0,0.25);
@@ -80,21 +80,25 @@ body {
 
 .password-field {
     display: flex;
-    align-items: stretch;
+    align-items: center;
+    flex-wrap: nowrap;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
 }
 
 .password-field input {
     margin-bottom: 0;
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .toggle-password {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 0 0.75rem;
     cursor: pointer;
     color: var(--text-secondary);
     display: flex;
