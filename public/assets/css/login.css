@@ -79,31 +79,31 @@ body {
 }
 
 .password-field {
-    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
     margin-bottom: 1.5rem;
 }
 
 .password-field input {
     margin-bottom: 0;
-    padding-right: 2.8rem;
+    flex: 1;
 }
 
 .toggle-password {
-    position: absolute;
-    right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    padding: 0.2rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0 0.75rem;
     cursor: pointer;
     color: var(--text-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s ease-in-out;
 }
 
-.toggle-password:hover { color: var(--accent-blue); }
+.toggle-password:hover { color: var(--accent-blue); border-color: var(--accent-blue); }
 .toggle-password i { width: 20px; height: 20px; }
 
 .btn-login {
