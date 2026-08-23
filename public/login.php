@@ -52,12 +52,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="text" id="usuario" name="usuario" autocomplete="username" required value="<?php echo htmlspecialchars($_POST['usuario'] ?? ''); ?>">
 
             <label for="password">Contraseña</label>
-            <input type="password" id="password" name="password" autocomplete="current-password" required>
+            <div class="password-field">
+                <input type="password" id="password" name="password" autocomplete="current-password" required>
+                <button type="button" class="toggle-password" id="togglePassword" aria-label="Mostrar u ocultar contraseña">
+                    <i data-lucide="eye"></i>
+                </button>
+            </div>
 
             <button type="submit" class="btn-login">Ingresar</button>
         </form>
     </div>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        togglePassword.addEventListener('click', function () {
+            const mostrar = passwordInput.type === 'password';
+            passwordInput.type = mostrar ? 'text' : 'password';
+            togglePassword.innerHTML = '<i data-lucide="' + (mostrar ? 'eye-off' : 'eye') + '"></i>';
+            lucide.createIcons();
+        });
+    </script>
 </body>
 </html>
