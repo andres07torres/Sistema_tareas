@@ -1,0 +1,1 @@
+﻿<?php require "config/database.php"; $db = (new Database())->getConnection(); try { $stmt = $db->query("SELECT ''::date"); print_r($stmt->fetch(PDO::FETCH_ASSOC)); } catch (Exception $e) { echo $e->getMessage(); } ?>

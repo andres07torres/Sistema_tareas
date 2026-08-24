@@ -1,0 +1,1 @@
+﻿<?php require "config/database.php"; $db = (new Database())->getConnection(); $stmt = $db->query("SELECT CURRENT_DATE, CURRENT_TIMESTAMP, current_setting('TIMEZONE')"); print_r($stmt->fetch(PDO::FETCH_ASSOC)); ?>

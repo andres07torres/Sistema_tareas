@@ -15,6 +15,7 @@ class Database {
             $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
             $conn = new PDO($dsn, $user, $password);
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $conn->exec("SET TIME ZONE 'America/Guayaquil'");
 
             if (!self::$migrated) {
                 self::$migrated = true;

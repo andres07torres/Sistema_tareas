@@ -50,7 +50,7 @@ try {
                     ':titulo'         => trim($data[0]),
                     ':descripcion'    => $descripcion,
                     ':fecha_entrega'  => trim($data[2]),
-                    ':estado'         => trim($data[3]) ?: 'pendiente',
+                    ':estado'         => in_array(strtolower(trim($data[3])), ['inactivo', 'pasivo']) ? 'inactivo' : 'pendiente',
                     ':materia'        => trim($data[4]),
                     ':tipo'           => trim($data[5]),
                     ':fecha_apertura' => trim($data[6]),
