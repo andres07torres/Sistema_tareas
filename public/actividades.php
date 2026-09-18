@@ -285,8 +285,9 @@ $driveLinks_json = json_encode($driveLinks);
             padding: 0;
         }
 
-        .modal-form .date-input::-webkit-calendar-picker-indicator {
-            display: none !important;
+        /* Regla general para todos los navegadores: ocultar el ícono personalizado cuando el campo se vuelve de tipo 'date' para evitar que se duplique con el ícono nativo de cada navegador */
+        .modal-form input[type="date"].date-input {
+            background-image: none !important;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
