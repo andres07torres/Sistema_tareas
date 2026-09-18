@@ -184,8 +184,8 @@ try {
     // REGISTRO AUTOMÁTICO DE SUSCRIPTOR
     registrarSuscriptor($chatId, $update, $db);
 
-    // REACCIÓN A "GRACIAS"
-    if (stripos($text, "gracias") !== false) {
+    // REACCIÓN A "GRACIAS" O "GOOD"
+    if (stripos($text, "gracias") !== false || stripos($text, "good") !== false) {
         $messageId = $update["message"]["message_id"];
         reaccionarMensaje($chatId, $messageId, $telegramToken, "👍");
     }
