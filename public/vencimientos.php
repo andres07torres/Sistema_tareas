@@ -201,10 +201,12 @@ foreach ($tareas as $t) {
                                     <i data-lucide="<?php echo $icon; ?>" size="16"></i>
                                     <span><?php echo ($t['tipo'] == 'test') ? 'Test / Lección' : 'Tarea'; ?></span>
                                 </div>
+                                <?php if (!empty($t['fecha_entrega'])): ?>
                                 <div class="meta-item">
                                     <i data-lucide="clock" size="16"></i>
                                     <span>Entrega: <?php echo date('d M, Y', strtotime($t['fecha_entrega'])); ?></span>
                                 </div>
+                                <?php endif; ?>
                                 <div class="badge">
                                     <?php echo $t['dias_restantes'] == 0 ? '¡Hoy!' : ($t['dias_restantes'] == 1 ? 'Mañana' : $t['dias_restantes'] . ' días rest.'); ?>
                                 </div>

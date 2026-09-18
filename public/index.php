@@ -224,8 +224,14 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
                         </div>
                     <?php else: ?>
                         <?php foreach ($proximas as $t): 
-                            $dias = (strtotime($t['fecha_entrega']) - strtotime(date('Y-m-d'))) / 86400;
-                            $urgencyColor = ($dias <= 1) ? 'var(--danger)' : (($dias <= 3) ? 'var(--warning)' : 'var(--success)');
+                            $fecha_str = $t['fecha_entrega'] ?? '';
+                            if (empty($fecha_str)) {
+                                $dias = 999;
+                                $urgencyColor = 'var(--success)';
+                            } else {
+                                $dias = (strtotime($fecha_str) - strtotime(date('Y-m-d'))) / 86400;
+                                $urgencyColor = ($dias <= 1) ? 'var(--danger)' : (($dias <= 3) ? 'var(--warning)' : 'var(--success)');
+                            }
                         ?>
                             <div class="task-item">
                                 <div class="task-info">
@@ -234,12 +240,14 @@ $materia_stats = $db->query("SELECT materia, COUNT(*) as total FROM tareas WHERE
                                     <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem;">
                                         <div class="task-date">
                                             <i data-lucide="calendar" size="14"></i>
-                                            <?php echo date('d M', strtotime($t['fecha_entrega'])); ?>
+                                            <?php echo empty($fecha_str) ? 'Sin fecha' : date('d M', strtotime($fecha_str)); ?>
                                         </div>
+                                        <?php if (!empty($fecha_str)): ?>
                                         <div class="task-date" style="color: <?php echo $urgencyColor; ?>; font-weight: 800;">
                                             <i data-lucide="clock" size="14"></i>
                                             <?php echo ($dias == 0) ? 'Hoy' : (($dias == 1) ? 'Mañana' : "$dias días"); ?>
                                         </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div style="text-align: right;">

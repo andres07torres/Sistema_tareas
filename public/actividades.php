@@ -488,20 +488,24 @@ $driveLinks_json = json_encode($driveLinks);
                                 </td>
                                 <td class="hide-tablet">
                                     <div class="date-info">
+                                        <?php if (!empty($t['fecha_apertura'])): ?>
                                         <span title="Apertura">
                                             <i data-lucide="unlock" size="14"></i>
                                             Abre: <?php echo date('d/m/Y', strtotime($t['fecha_apertura'])); ?>
                                         </span>
+                                        <?php endif; ?>
                                         <?php if (!empty($t['limite_drive'])): ?>
                                         <span title="Limite Drive">
                                             <i data-lucide="cloud" size="14"></i>
                                             Drive: <?php echo date('d/m/Y', strtotime($t['limite_drive'])); ?>
                                         </span>
                                         <?php endif; ?>
+                                        <?php if (!empty($t['fecha_entrega'])): ?>
                                         <span title="Cierre" class="entrega">
                                             <i data-lucide="lock" size="14"></i>
                                             Cierra: <?php echo date('d/m/Y', strtotime($t['fecha_entrega'])); ?>
                                         </span>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                                 <td style="text-align: right;">
