@@ -16,7 +16,7 @@ try {
     
     // Limpiar descripción y convertir a NULL si está vacía
     $descripcion = isset($data['descripcion']) ? trim($data['descripcion']) : null;
-    if ($descripcion === "" || strtoupper($descripcion) === "EMPTY") {
+    if ($descripcion === "" || ($descripcion !== null && strtoupper($descripcion) === "EMPTY")) {
         $descripcion = null;
     }
 
