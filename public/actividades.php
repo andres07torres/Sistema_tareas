@@ -287,13 +287,11 @@ $driveLinks_json = json_encode($driveLinks);
 
         .modal-form .date-input::-webkit-calendar-picker-indicator {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
+            right: 1rem;
+            width: 1.5rem;
             height: 100%;
-            opacity: 0;
+            background: transparent;
+            color: transparent;
             cursor: pointer;
             z-index: 2;
         }
