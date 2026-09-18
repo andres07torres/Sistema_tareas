@@ -164,14 +164,7 @@ $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .modal-form .date-input::-webkit-calendar-picker-indicator {
-            position: absolute;
-            right: 1rem;
-            width: 1.5rem;
-            height: 100%;
-            background: transparent;
-            color: transparent;
-            cursor: pointer;
-            z-index: 2;
+            display: none !important;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
