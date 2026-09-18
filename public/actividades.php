@@ -266,57 +266,7 @@ $driveLinks_json = json_encode($driveLinks);
         }
 
         .modal-form .date-input {
-            -webkit-appearance: none;
-            appearance: none;
-            background-color: white;
-            text-align: left;
-            height: 3.125rem;
             cursor: pointer;
-            width: 100%;
-            padding: 0.85rem 1rem;
-            padding-right: 2.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 0;
-            font-family: inherit;
-            font-size: 0.95rem;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .date-wrapper {
-            position: relative;
-            display: block;
-            margin-bottom: 1.75rem;
-        }
-
-        .custom-date-icon {
-            position: absolute;
-            right: 1px;
-            top: 1px;
-            bottom: 1px;
-            width: 2.5rem;
-            background-color: white;
-            border-radius: 0 8px 8px 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-        }
-
-        .modal-form .date-input::-webkit-date-and-time-value {
-            height: 1.25rem;
-            margin: 0;
-            padding: 0;
-        }
-
-        .modal-form .date-input::-webkit-calendar-picker-indicator {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            width: 0 !important;
-            height: 0 !important;
-            background: transparent !important;
-            color: transparent !important;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
@@ -767,51 +717,36 @@ $driveLinks_json = json_encode($driveLinks);
 
             const datesField = `
                 <label>Fecha Apertura</label>
-                <div class="date-wrapper">
-                    <input type="${task.fecha_apertura ? 'date' : 'text'}" 
-                           placeholder="dd / mm / aaaa" 
-                           class="date-input"
-                           name="fecha_apertura" 
-                           value="${task.fecha_apertura || ''}" 
-                           required 
-                           onfocus="this.type='date'" 
-                           onclick="if(this.showPicker) this.showPicker()"
-                           onblur="if(!this.value)this.type='text'">
-                    <div class="custom-date-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
-                    </div>
-                </div>
+                <input type="${task.fecha_apertura ? 'date' : 'text'}" 
+                       placeholder="dd / mm / aaaa" 
+                       class="date-input"
+                       name="fecha_apertura" 
+                       value="${task.fecha_apertura || ''}" 
+                       required 
+                       onfocus="this.type='date'" 
+                       onclick="if(this.showPicker) this.showPicker()"
+                       onblur="if(!this.value)this.type='text'">
                 
                 <label>Fecha Entrega</label>
-                <div class="date-wrapper">
-                    <input type="${task.fecha_entrega ? 'date' : 'text'}" 
-                           placeholder="dd / mm / aaaa" 
-                           class="date-input"
-                           name="fecha_entrega" 
-                           value="${task.fecha_entrega || ''}" 
-                           required 
-                           onfocus="this.type='date'" 
-                           onclick="if(this.showPicker) this.showPicker()"
-                           onblur="if(!this.value)this.type='text'">
-                    <div class="custom-date-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
-                    </div>
-                </div>
+                <input type="${task.fecha_entrega ? 'date' : 'text'}" 
+                       placeholder="dd / mm / aaaa" 
+                       class="date-input"
+                       name="fecha_entrega" 
+                       value="${task.fecha_entrega || ''}" 
+                       required 
+                       onfocus="this.type='date'" 
+                       onclick="if(this.showPicker) this.showPicker()"
+                       onblur="if(!this.value)this.type='text'">
                 
                 <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                <div class="date-wrapper">
-                    <input type="${task.limite_drive ? 'date' : 'text'}" 
-                           placeholder="dd / mm / aaaa" 
-                           class="date-input"
-                           name="limite_drive" 
-                           value="${task.limite_drive || ''}" 
-                           onfocus="this.type='date'" 
-                           onclick="if(this.showPicker) this.showPicker()"
-                           onblur="if(!this.value)this.type='text'">
-                    <div class="custom-date-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
-                    </div>
-                </div>
+                <input type="${task.limite_drive ? 'date' : 'text'}" 
+                       placeholder="dd / mm / aaaa" 
+                       class="date-input"
+                       name="limite_drive" 
+                       value="${task.limite_drive || ''}" 
+                       onfocus="this.type='date'" 
+                       onclick="if(this.showPicker) this.showPicker()"
+                       onblur="if(!this.value)this.type='text'">
             `;
 
             if (tipo === 'tarea') {
@@ -823,35 +758,25 @@ $driveLinks_json = json_encode($driveLinks);
             } else if (tipo === 'test' || tipo === 'test') {
                 fieldsHtml = materiaField + tituloField + `
                     <label>Fecha del Test</label>
-                    <div class="date-wrapper">
-                        <input type="${task.fecha_entrega ? 'date' : 'text'}" 
-                               placeholder="dd / mm / aaaa" 
-                               class="date-input"
-                               name="fecha_entrega" 
-                               value="${task.fecha_entrega || ''}" 
-                               required 
-                               onfocus="this.type='date'" 
-                               onclick="if(this.showPicker) this.showPicker()"
-                               onblur="if(!this.value)this.type='text'">
-                        <div class="custom-date-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
-                        </div>
-                    </div>
+                    <input type="${task.fecha_entrega ? 'date' : 'text'}" 
+                           placeholder="dd / mm / aaaa" 
+                           class="date-input"
+                           name="fecha_entrega" 
+                           value="${task.fecha_entrega || ''}" 
+                           required 
+                           onfocus="this.type='date'" 
+                           onclick="if(this.showPicker) this.showPicker()"
+                           onblur="if(!this.value)this.type='text'">
                     
                     <label>Limite Drive <span style="font-weight:400;text-transform:none;">(opcional)</span></label>
-                    <div class="date-wrapper">
-                        <input type="${task.limite_drive ? 'date' : 'text'}" 
-                               placeholder="dd / mm / aaaa" 
-                               class="date-input"
-                               name="limite_drive" 
-                               value="${task.limite_drive || ''}" 
-                               onfocus="this.type='date'" 
-                               onclick="if(this.showPicker) this.showPicker()"
-                               onblur="if(!this.value)this.type='text'">
-                        <div class="custom-date-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#65676b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
-                        </div>
-                    </div>
+                    <input type="${task.limite_drive ? 'date' : 'text'}" 
+                           placeholder="dd / mm / aaaa" 
+                           class="date-input"
+                           name="limite_drive" 
+                           value="${task.limite_drive || ''}" 
+                           onfocus="this.type='date'" 
+                           onclick="if(this.showPicker) this.showPicker()"
+                           onblur="if(!this.value)this.type='text'">
                 `;
                 document.getElementById('modalTitle').innerHTML = '<i data-lucide="graduation-cap"></i> Editar Test';
             }
