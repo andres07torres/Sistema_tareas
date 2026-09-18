@@ -70,6 +70,25 @@ function enviarKeyboard($chatId, $token, $mensaje, $botones) {
     curl_close($ch);
 }
 
+function reaccionarMensaje($chatId, $messageId, $token, $emoji) {
+    $url = "https://api.telegram.org/bot{$token}/setMessageReaction";
+    $data = json_encode([
+        'chat_id' => $chatId,
+        'message_id' => $messageId,
+        'reaction' => [['type' => 'emoji', 'emoji' => $emoji]]
+    ]);
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_exec($ch);
+    curl_close($ch);
+}
+
 function formatearTexto($tareas, $titulo_seccion) {
     if (count($tareas) == 0) return "☕ No hay tareas pendientes.";
     
@@ -164,6 +183,12 @@ try {
 
     // REGISTRO AUTOMÁTICO DE SUSCRIPTOR
     registrarSuscriptor($chatId, $update, $db);
+
+    // REACCIÓN A "GRACIAS"
+    if (stripos($text, "gracias") !== false) {
+        $messageId = $update["message"]["message_id"];
+        reaccionarMensaje($chatId, $messageId, $telegramToken, "👍");
+    }
 
     if ($text == "/start" || $text == "/ayuda") {
         enviarRespuesta($chatId, $telegramToken, "🤖 *Asistente UNEMI Activo*\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes\n/materias - Ver por materia\n/motivacion - Frase motivacional");
