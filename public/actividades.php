@@ -270,13 +270,14 @@ $driveLinks_json = json_encode($driveLinks);
             appearance: none;
             position: relative;
             background-color: white;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2365676b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='4' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' x2='16' y1='2' y2='6'%3E%3C/line%3E%3Cline x1='8' x2='8' y1='2' y2='6'%3E%3C/line%3E%3Cline x1='3' x2='21' y1='10' y2='10'%3E%3C/line%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2365676b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2v3'/%3E%3Cpath d='M16 2v3'/%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Cpath d='M3 9h18'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 1rem center;
             background-size: 1.25rem;
             padding-right: 2.5rem;
             text-align: left;
             height: 3.125rem;
+            cursor: pointer;
         }
 
         .modal-form .date-input::-webkit-date-and-time-value {
@@ -285,9 +286,14 @@ $driveLinks_json = json_encode($driveLinks);
             padding: 0;
         }
 
-        /* Regla general para todos los navegadores: ocultar el ícono personalizado cuando el campo se vuelve de tipo 'date' para evitar que se duplique con el ícono nativo de cada navegador */
-        .modal-form input[type="date"].date-input {
-            background-image: none !important;
+        .modal-form .date-input::-webkit-calendar-picker-indicator {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            background: transparent !important;
+            color: transparent !important;
         }
 
         .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
