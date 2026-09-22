@@ -33,6 +33,7 @@ if (empty($googleClientId) || empty($googleClientSecret) || empty($googleRefresh
 }
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/check_webhook.php';
 $db = (new Database())->getConnection();
 
 // ─── LOGGING ───

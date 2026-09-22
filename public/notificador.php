@@ -20,6 +20,7 @@ if (!isset($_GET['token']) || $_GET['token'] !== $token_seguridad) {
 }
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/check_webhook.php';
 $db = (new Database())->getConnection();
 
 // Función de logging simple

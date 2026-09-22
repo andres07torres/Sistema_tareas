@@ -10,6 +10,7 @@ startSession();
 requireAuth();
 // deploy trigger v2
 require_once '../config/database.php';
+require_once '../config/check_webhook.php';
 $db = (new Database())->getConnection();
 
 // Estadísticas rápidas

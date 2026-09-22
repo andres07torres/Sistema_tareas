@@ -18,7 +18,7 @@ function enviarRespuesta($chatId, $token, $mensaje) {
     $data = [
         'chat_id' => $chatId,
         'text' => $mensaje,
-        'parse_mode' => 'Markdown',
+        'parse_mode' => 'HTML',
         'disable_web_page_preview' => true
     ];
     $ch = curl_init($url);
@@ -56,7 +56,7 @@ function enviarKeyboard($chatId, $token, $mensaje, $botones) {
     $data = [
         'chat_id' => $chatId,
         'text' => $mensaje,
-        'parse_mode' => 'Markdown',
+        'parse_mode' => 'HTML',
         'reply_markup' => json_encode(['inline_keyboard' => $botones], JSON_UNESCAPED_UNICODE)
     ];
     $ch = curl_init($url);
@@ -103,7 +103,7 @@ function formatearTexto($tareas, $titulo_seccion) {
         $tipo = $t['tipo'] ?? 'tarea';
         
         if ($materia !== $materiaActual) {
-            $res .= "\n📘 *{$materia}*\n";
+            $res .= "\n📘 <b>" . htmlspecialchars($materia) . "</b>\n";
             $materiaActual = $materia;
         }
         
@@ -115,12 +115,12 @@ function formatearTexto($tareas, $titulo_seccion) {
             else $vence = " (vence en {$dias}d)";
         }
         
-        $res .= "{$icono} *{$titulo}*\n";
+        $res .= "{$icono} <b>" . htmlspecialchars($titulo) . "</b>\n";
         $limiteDrive = $t['limite_drive'] ?? null;
         if ($limiteDrive) {
-            $res .= "⌛ *Limite Drive:* {$limiteDrive}\n";
+            $res .= "⌛ <b>Limite Drive:</b> {$limiteDrive}\n";
         }
-        $res .= "⌛ *Cierre:* {$f_entrega}{$vence}\n";
+        $res .= "⌛ <b>Cierre:</b> {$f_entrega}{$vence}\n";
     }
     return $res;
 }
@@ -161,9 +161,9 @@ try {
             $stmtDrive->execute([$materia]);
             $driveLink = $stmtDrive->fetchColumn();
 
-            $respuesta = formatearTexto($tareas, "📚 ACTIVIDADES DE *" . strtoupper($materia) . "*");
+            $respuesta = formatearTexto($tareas, "📚 ACTIVIDADES DE <b>" . strtoupper(htmlspecialchars($materia)) . "</b>");
             if ($driveLink) {
-                $respuesta .= "\n📁 *Carpeta Drive:* [Abrir enlace]({$driveLink})";
+                $respuesta .= "\n📁 <b>Carpeta Drive:</b> <a href=\"{$driveLink}\">Abrir enlace</a>";
             }
             enviarRespuesta($chatId, $telegramToken, $respuesta);
         }
@@ -191,7 +191,7 @@ try {
     }
 
     if ($text == "/start" || $text == "/ayuda") {
-        enviarRespuesta($chatId, $telegramToken, "🤖 *Asistente UNEMI Activo*\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes\n/materias - Ver por materia\n/motivacion - Frase motivacional");
+        enviarRespuesta($chatId, $telegramToken, "🤖 <b>Asistente UNEMI Activo</b>\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes\n/materias - Ver por materia\n/motivacion - Frase motivacional");
     }
     elseif ($text == "/hoy") {
         $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC");
@@ -220,7 +220,7 @@ try {
                 $icono = !empty($m['drive_link']) ? "📁" : "📘";
                 $botones[] = [['text' => "{$icono} {$m['nombre']}", 'callback_data' => "materia|{$m['nombre']}"]];
             }
-            enviarKeyboard($chatId, $telegramToken, "📚 *SELECCIONA UNA MATERIA*\n\nElige una materia para ver sus actividades y enlace Drive:", $botones);
+            enviarKeyboard($chatId, $telegramToken, "📚 <b>SELECCIONA UNA MATERIA</b>\n\nElige una materia para ver sus actividades y enlace Drive:", $botones);
         }
     }
     elseif ($text == "/motivacion") {
@@ -454,7 +454,7 @@ try {
             "La perseverancia es la clave que abre todas las puertas. — Anónimo"
         ];
         $frase = $frases[array_rand($frases)];
-        enviarRespuesta($chatId, $telegramToken, "🌟 *FRASE DEL DÍA*\n📅 {$dia} de {$mes}\n\n_{$frase}_\n\n💪 ¡A darle con todo!");
+        enviarRespuesta($chatId, $telegramToken, "🌟 <b>FRASE DEL DÍA</b>\n📅 {$dia} de {$mes}\n\n<i>{$frase}</i>\n\n💪 ¡A darle con todo!");
     }
 
 } catch (\Throwable $e) {
