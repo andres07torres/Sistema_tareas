@@ -190,25 +190,52 @@ try {
         reaccionarMensaje($chatId, $messageId, $telegramToken, "👍");
     }
 
-    if ($text == "/start" || $text == "/ayuda") {
+    // --- RECONOCIMIENTO INTELIGENTE DE LENGUAJE NATURAL ---
+    $tipoChat = $update["message"]["chat"]["type"] ?? "private";
+    
+    // Detecta si el usuario está invocando al bot
+    $esLlamado = preg_match('/(botsito|bot|asistente|@)/i', $text);
+    
+    // Si es un grupo, obligamos a que lo llamen por su "nombre". En chat privado, asume que le hablan a él.
+    $debeResponder = ($tipoChat === "private") || $esLlamado;
+
+    // 1. Verifica si pide ayuda
+    $pideAyuda = $debeResponder && preg_match('/(ayuda|qué puedes hacer|comandos|cómo funcionas|qué haces)/i', $text);
+
+    // 2. Verifica si el mensaje pregunta por TODAS las tareas
+    $pideTodas = $debeResponder && preg_match('/(todas|completo)/i', $text) && preg_match('/(tareas|actividades|pendientes|deberes|entregas)/i', $text);
+
+    // 3. Verifica si el mensaje pregunta por tareas de la semana
+    $pideSemana = $debeResponder && !$pideTodas && preg_match('/(semana|próximos 7 días)/i', $text) && preg_match('/(tareas|actividades|pendientes|deberes|entregas)/i', $text);
+    
+    // 4. Verifica si el mensaje pregunta por tareas de hoy
+    $pideHoy = $debeResponder && !$pideTodas && preg_match('/(hoy|para hoy)/i', $text) && preg_match('/(tareas|actividades|pendientes|deberes|entregas)/i', $text);
+
+    // 5. Verifica si pregunta por materias
+    $pideMaterias = $debeResponder && preg_match('/(materias|asignaturas)/i', $text);
+
+    // 6. Verifica si pide motivación
+    $pideMotivacion = $debeResponder && preg_match('/(motivaci[oó]n|mot[ií]vame|frase|inspiraci[oó]n|dime algo bonito)/i', $text);
+
+    if ($text == "/start" || $text == "/ayuda" || $pideAyuda) {
         enviarRespuesta($chatId, $telegramToken, "🤖 <b>Asistente UNEMI Activo</b>\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes\n/materias - Ver por materia\n/motivacion - Frase motivacional");
     }
-    elseif ($text == "/hoy") {
+    elseif ($text == "/hoy" || $pideHoy) {
         $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC");
         $stmt->execute();
         enviarRespuesta($chatId, $telegramToken, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "📅 TAREAS PARA HOY"));
     }
-    elseif ($text == "/semana") {
+    elseif ($text == "/semana" || $pideSemana) {
         $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 ORDER BY materia ASC, fecha_entrega ASC");
         $stmt->execute();
         enviarRespuesta($chatId, $telegramToken, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "🗓 REPORTE DE LA SEMANA"));
     }
-    elseif ($text == "/tareas") {
+    elseif ($text == "/tareas" || $pideTodas) {
         $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC, fecha_entrega ASC");
         $stmt->execute();
         enviarRespuesta($chatId, $telegramToken, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "📋 TODOS LOS PENDIENTES"));
     }
-    elseif ($text == "/materias") {
+    elseif ($text == "/materias" || $pideMaterias) {
         $stmt = $db->query("SELECT nombre, drive_link FROM materias ORDER BY nombre ASC");
         $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -223,7 +250,7 @@ try {
             enviarKeyboard($chatId, $telegramToken, "📚 <b>SELECCIONA UNA MATERIA</b>\n\nElige una materia para ver sus actividades y enlace Drive:", $botones);
         }
     }
-    elseif ($text == "/motivacion") {
+    elseif ($text == "/motivacion" || $pideMotivacion) {
         $meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
         $dia = date('j');
         $mes = $meses[(int)date('m') - 1];
