@@ -1,4 +1,6 @@
 services:
+
+  # ── Base de datos PostgreSQL ─────────────────────────────────
   db:
     image: postgres:16-alpine
     container_name: sistema_tareas_db
@@ -7,77 +9,66 @@ services:
       POSTGRES_DB: ${DB_NAME:-tareas_db}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - /mnt/respaldo/docker_data/sistema_tareas/postgres:/var/lib/postgresql/data
       - ./config/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
     ports:
       - "${DB_EXTERNAL_PORT:-5434}:5432"
-    networks:
-      - tareas_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-tareas_db}"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - tareas_net
 
+  # ── Administrador pgAdmin 4 ──────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sistema_tareas_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@andr3sdev7.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-AT070linux$$}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "${PGADMIN_PORT:-5052}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - tareas_net
+
+  # ── Aplicación Web PHP Apache ────────────────────────────────
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: sistema_tareas_app
     restart: always
-    depends_on:
-      db:
-        condition: service_healthy
     env_file:
       - .env
     environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-tareas_db}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD}
-      CRON_TOKEN: ${CRON_TOKEN}
-      ADMIN_USER: ${ADMIN_USER}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
-      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
-      APP_URL: ${APP_URL}
-      APACHE_DOCUMENT_ROOT: ${APACHE_DOCUMENT_ROOT:-/var/www/html/public}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_REFRESH_TOKEN: ${GOOGLE_REFRESH_TOKEN}
+      DB_HOST: db
+      DB_PORT: 5432
     ports:
       - "${APP_PORT:-8085}:80"
     volumes:
       - ./logs:/var/www/html/logs
-    networks:
-      - tareas_net
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: sistema_tareas_pgadmin
-    restart: always
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@andr3sdev7.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-Admin123456!}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "${PGADMIN_PORT:-5052}:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
     networks:
       - tareas_net
 
+# ── Volúmenes persistentes ────────────────────────────────────
+volumes:
+  pgadmin_data:
+
+# ── Red interna ────────────────────────────────────────────────
 networks:
   tareas_net:
     driver: bridge
-
-volumes:
-  postgres_data:
-  pgadmin_data:
