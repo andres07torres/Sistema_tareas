@@ -46,6 +46,9 @@ try {
                     $descripcion = null;
                 }
 
+                $fecha_apertura = isset($data[6]) && trim($data[6]) !== '' && strtoupper(trim($data[6])) !== 'N/A' ? trim($data[6]) : null;
+                $limite_drive   = isset($data[7]) && trim($data[7]) !== '' && strtoupper(trim($data[7])) !== 'N/A' ? trim($data[7]) : null;
+
                 $stmt->execute([
                     ':titulo'         => trim($data[0]),
                     ':descripcion'    => $descripcion,
@@ -53,8 +56,8 @@ try {
                     ':estado'         => in_array(strtolower(trim($data[3])), ['inactivo', 'pasivo']) ? 'inactivo' : 'pendiente',
                     ':materia'        => trim($data[4]),
                     ':tipo'           => trim($data[5]),
-                    ':fecha_apertura' => trim($data[6]),
-                    ':limite_drive'   => isset($data[7]) && trim($data[7]) !== '' ? trim($data[7]) : null
+                    ':fecha_apertura' => $fecha_apertura,
+                    ':limite_drive'   => $limite_drive
                 ]);
                 $count++;
             } catch (Exception $e) {

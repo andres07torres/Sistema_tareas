@@ -80,11 +80,13 @@ function formatearTexto($tareas, $titulo_seccion) {
         $icono = ($tipo == 'test') ? "🎓" : "📝";
         $vence = "";
         if ($dias !== null) {
-            if ($dias < 0) $vence = " (atrasada " . abs($dias) . "d)";
+            if ($dias < 0) $vence = " (atrasada " . abs($dias) . " días)";
             elseif ($dias == 0) $vence = " (¡HOY!)";
-            else $vence = " (vence en {$dias}d)";
+            else $vence = " (vence en {$dias} días)";
         }
         $res .= "{$icono} *{$titulo}*\n";
+        $f_apertura = $t['fecha_apertura'] ?? null;
+        if (!empty($f_apertura)) $res .= "📅 *Inicio:* {$f_apertura}\n";
         $limiteDrive = $t['limite_drive'] ?? null;
         if ($limiteDrive) $res .= "⌛ *Limite Drive:* {$limiteDrive}\n";
         $res .= "⌛ *Cierre:* {$f_entrega}{$vence}\n";
@@ -122,7 +124,7 @@ while (true) {
 
                 if (strpos($data, 'materia|') === 0) {
                     $materia = substr($data, 8);
-                    $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, limite_drive, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' AND materia = :materia ORDER BY fecha_entrega ASC");
+                    $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, limite_drive, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' AND materia = :materia ORDER BY fecha_entrega ASC");
                     $stmt->execute([':materia' => $materia]);
                     $tareas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -153,15 +155,15 @@ while (true) {
             if ($text == "/start" || $text == "/ayuda") {
                 enviarRespuesta($chatId, "🤖 *Asistente UNEMI Activo*\n\n/hoy - Tareas de hoy\n/semana - Próximos 7 días\n/tareas - Todos los pendientes\n/materias - Ver por materia\n/motivacion - Frase motivacional");
             } elseif ($text == "/hoy") {
-                $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC");
+                $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, limite_drive FROM tareas WHERE estado = 'pendiente' AND fecha_entrega = CURRENT_DATE ORDER BY materia ASC");
                 $stmt->execute();
                 enviarRespuesta($chatId, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "📅 TAREAS PARA HOY"));
             } elseif ($text == "/semana") {
-                $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 ORDER BY materia ASC, fecha_entrega ASC");
+                $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, limite_drive, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' AND (fecha_entrega - CURRENT_DATE) BETWEEN 0 AND 7 ORDER BY materia ASC, fecha_entrega ASC");
                 $stmt->execute();
                 enviarRespuesta($chatId, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "🗓 REPORTE DE LA SEMANA"));
             } elseif ($text == "/tareas") {
-                $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_entrega, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC, fecha_entrega ASC");
+                $stmt = $db->prepare("SELECT titulo, materia, tipo, fecha_apertura, fecha_entrega, limite_drive, (fecha_entrega - CURRENT_DATE) as dias_restantes FROM tareas WHERE estado = 'pendiente' ORDER BY materia ASC, fecha_entrega ASC");
                 $stmt->execute();
                 enviarRespuesta($chatId, formatearTexto($stmt->fetchAll(PDO::FETCH_ASSOC), "📋 TODOS LOS PENDIENTES"));
             } elseif ($text == "/materias") {

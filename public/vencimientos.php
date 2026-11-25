@@ -201,6 +201,18 @@ foreach ($tareas as $t) {
                                     <i data-lucide="<?php echo $icon; ?>" size="16"></i>
                                     <span><?php echo ($t['tipo'] == 'test') ? 'Test / Lección' : 'Tarea'; ?></span>
                                 </div>
+                                <?php if (!empty($t['fecha_apertura'])): ?>
+                                <div class="meta-item">
+                                    <i data-lucide="calendar" size="16"></i>
+                                    <span>Inicio: <?php echo date('d M, Y', strtotime($t['fecha_apertura'])); ?></span>
+                                </div>
+                                <?php endif; ?>
+                                <?php if (!empty($t['limite_drive'])): ?>
+                                <div class="meta-item">
+                                    <i data-lucide="cloud" size="16"></i>
+                                    <span>Drive: <?php echo date('d M, Y', strtotime($t['limite_drive'])); ?></span>
+                                </div>
+                                <?php endif; ?>
                                 <?php if (!empty($t['fecha_entrega'])): ?>
                                 <div class="meta-item">
                                     <i data-lucide="clock" size="16"></i>

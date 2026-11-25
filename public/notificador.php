@@ -91,7 +91,9 @@ foreach ($tareas as $t) {
     
     $mensaje .= "\n📘 *{$materia}*\n";
     $mensaje .= "{$icono} *{$t['titulo']}*\n";
-    $mensaje .= "📅 *Inicio:* {$t['fecha_apertura']}\n";
+    if (!empty($t['fecha_apertura'])) {
+        $mensaje .= "📅 *Inicio:* {$t['fecha_apertura']}\n";
+    }
     if (!empty($t['limite_drive'])) {
         $mensaje .= "⌛ *Limite Drive:* {$t['limite_drive']}\n";
     }

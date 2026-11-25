@@ -36,10 +36,10 @@ try {
             ':titulo' => trim($data['titulo']),
             ':descripcion' => $descripcion,
             ':fecha_entrega' => trim($data['fecha_entrega']),
-            ':fecha_apertura' => isset($data['fecha_apertura']) ? trim($data['fecha_apertura']) : null,
+            ':fecha_apertura' => isset($data['fecha_apertura']) && trim($data['fecha_apertura']) !== '' ? trim($data['fecha_apertura']) : null,
             ':materia' => trim($data['materia']),
             ':tipo' => trim($data['tipo']),
-            ':limite_drive' => isset($data['limite_drive']) && $data['limite_drive'] !== '' ? trim($data['limite_drive']) : null,
+            ':limite_drive' => isset($data['limite_drive']) && trim($data['limite_drive']) !== '' ? trim($data['limite_drive']) : null,
             ':id' => $id
         ];
     } else {
@@ -49,10 +49,10 @@ try {
             ':titulo' => trim($data['titulo']),
             ':descripcion' => $descripcion,
             ':fecha_entrega' => trim($data['fecha_entrega']),
-            ':fecha_apertura' => isset($data['fecha_apertura']) ? trim($data['fecha_apertura']) : null,
+            ':fecha_apertura' => isset($data['fecha_apertura']) && trim($data['fecha_apertura']) !== '' ? trim($data['fecha_apertura']) : null,
             ':materia' => trim($data['materia']),
             ':tipo' => trim($data['tipo']),
-            ':limite_drive' => isset($data['limite_drive']) && $data['limite_drive'] !== '' ? trim($data['limite_drive']) : null
+            ':limite_drive' => isset($data['limite_drive']) && trim($data['limite_drive']) !== '' ? trim($data['limite_drive']) : null
         ];
     }
               
